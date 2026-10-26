@@ -14,33 +14,6 @@
 
 ---
 
-## ✨ Fitur Utama
-
-- 🚀 **Dual Engine Playback:**
-  - **ExoPlayer (AndroidX Media3):** Akselerasi perangkat keras optimal, efisiensi baterai, dan dukungan HDR10+.
-  - **MPV (libmpv + libass):** Rendering subtitle tingkat lanjut (dukungan penuh font, animasi, dan styling ASS/SSA).
-- 📑 **Library & Episode Scanner:**
-  - Pemindaian cerdas folder video dan seri anime.
-  - Pengurutan alami (Natural Order) berdasarkan Nama, Terbaru, atau Terlama.
-  - Navigasi cepat dengan bilah indeks alfabetik (A-Z Fast Scroller).
-- 🖐️ **Kontrol Gestur Interaktif:**
-  - Geser vertikal di sisi kiri untuk mengatur kecerahan layar.
-  - Geser vertikal di sisi kanan untuk mengatur volume.
-  - Ketuk dua kali (Double-tap) untuk melompat 10 detik ke depan/belakang.
-  - Tekan dan tahan (Long-press) untuk mempercepat video (2x Speed).
-- 💬 **Subtitle & Audio:**
-  - Deteksi otomatis subtitle eksternal (`.srt`, `.ass`, `.vtt`, `.ssa`).
-  - Pemilih trek audio dan subtitle yang intuitif.
-- 🕒 **Playback State:**
-  - Melanjutkan posisi tonton terakhir secara otomatis (Resume Playback).
-  - Indikator riwayat tontonan per episode.
-- 📱 **Mode Tampilan Fleksibel:**
-  - Berbagai pilihan rasio aspek: Fit, Fill, Stretch, Zoom, 16:9, dan 4:3.
-  - Penguncian orientasi layar sensor otomatis.
-  - Mode Picture-in-Picture (PiP).
-
----
-
 ## 🛠️ Spesifikasi Teknis
 
 - **Bahasa:** Kotlin
