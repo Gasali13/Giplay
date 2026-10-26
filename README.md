@@ -10,16 +10,7 @@
 ## 💡 Inspirasi & Pengembangan
 
 - 🤖 **Dibangun Menggunakan Antigravity:** Proyek ini dikembangkan, diaudit, dan dioptimalkan secara kolaboratif menggunakan **Google Antigravity**.
-- 📺 **Referensi MX Player:** Alur interaksi pengguna, sistem kontrol gestur layar (pengaturan volume, kecerahan, dan seeking yang presisi), serta keandalan pemutaran terinspirasi langsung dari standar emas **MX Player** dengan sentuhan antarmuka modern khusus pecinta anime.
-
----
-
-## ⬇️ Download Aplikasi
-
-Anda dapat mengunduh file `.apk` versi terbaru langsung dari halaman rilis GitHub:
-
-- 📱 **[Download Giplay v1.0.0 APK](https://github.com/Gasali13/Giplay/releases/download/v1.0.0/Giplay-v1.0.0.apk)** *(Siap dipasang di Android 7.0+)*
-- 📦 **[Halaman Rilis Semua Versi](https://github.com/Gasali13/Giplay/releases)**
+- Referensi sebagian besar **MX Player**
 
 ---
 
@@ -58,21 +49,6 @@ Anda dapat mengunduh file `.apk` versi terbaru langsung dari halaman rilis GitHu
 - **Arsitektur:** MVVM (Model-View-ViewModel) dengan Kotlin Coroutines & Flow
 - **Penyimpanan Lokal:** Room Database & DataStore Preferences
 - **Build System:** Gradle Kotlin DSL (KSP)
-
----
-
-## 📦 Menjalankan Proyek
-
-1. Clone repositori ini:
-   ```bash
-   git clone https://github.com/Gasali13/Giplay.git
-   ```
-2. Buka proyek di **Android Studio** (Koala / Ladybug atau versi terbaru).
-3. Sambungkan perangkat Android fisik dengan mode **USB Debugging** aktif atau gunakan Emulator Android (API 24+).
-4. Klik tombol **Run** atau jalankan perintah Gradle:
-   ```bash
-   ./gradlew installDebug
-   ```
 
 ---
 
