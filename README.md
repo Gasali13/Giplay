@@ -1,6 +1,18 @@
 # Giplay 🎬
 
+[![Download APK](https://img.shields.io/badge/Download-Giplay%20APK%20(v1.0.0)-2ea44f?style=for-the-badge&logo=android&logoColor=white)](https://github.com/Gasali13/Giplay/releases/latest)
+[![Release](https://img.shields.io/github/v/release/Gasali13/Giplay?style=for-the-badge&color=blue)](https://github.com/Gasali13/Giplay/releases/latest)
+
 **Giplay** adalah aplikasi pemutar video Android berkinerja tinggi yang dirancang khusus untuk memutar anime dan video lokal dengan dukungan **Dual Engine** (ExoPlayer & MPV).
+
+---
+
+## ⬇️ Download Aplikasi
+
+Anda dapat mengunduh file `.apk` versi terbaru langsung dari halaman rilis GitHub:
+
+- 📱 **[Download Giplay v1.0.0 APK](https://github.com/Gasali13/Giplay/releases/download/v1.0.0/Giplay-v1.0.0.apk)** *(Siap dipasang di Android 7.0+)*
+- 📦 **[Halaman Rilis Semua Versi](https://github.com/Gasali13/Giplay/releases)**
 
 ---
 
