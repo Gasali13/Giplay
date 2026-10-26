@@ -1,0 +1,13 @@
+<resources>
+    <color name="primary">#0084FF</color>
+    <color name="on_primary">#FFFFFF</color>
+    <color name="secondary">#00A3FF</color>
+    <color name="on_secondary">#000000</color>
+    <color name="surface_variant">#1B1C1E</color>
+    <color name="on_surface">#F0F2F5</color>
+    <color name="on_surface_muted">#8A94A6</color>
+    <color name="transparent">#00000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="bs_background">#1B1C1E</color>
+</resources>

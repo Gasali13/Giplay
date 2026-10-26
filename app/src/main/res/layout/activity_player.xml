@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/player_root_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- MPV Video Player Surface (Direct libmpv + libass native rendering for Anime/MKV) -->
+    <com.personal.animeplayer.player.MPVView
+        android:id="@+id/mpv_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- ExoPlayer Surface (Native Hardware & HDR10+ / Dolby Vision Rendering) -->
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/exo_player_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:surface_type="surface_view"
+        app:use_controller="false" />
+
+
+
+    <!-- Fullscreen Touch Gesture Overlay -->
+    <View
+        android:id="@+id/gesture_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Double Tap Seek Animation Overlay (Arc & Chevrons) -->
+    <com.personal.animeplayer.ui.player.DoubleTapOverlayView
+        android:id="@+id/double_tap_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false" />
+
+    <!-- Floating Gesture Feedback Pill (Volume, Brightness, Seek) -->
+    <LinearLayout
+        android:id="@+id/gesture_feedback_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_indicator_pill"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:paddingTop="11dp"
+        android:paddingBottom="11dp"
+        android:elevation="12dp"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_gesture_icon"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:src="@drawable/ic_volume"
+            app:tint="@color/secondary" />
+
+        <TextView
+            android:id="@+id/tv_gesture_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:textColor="@color/white"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            tools:text="85%" />
+    </LinearLayout>
+
+    <!-- Central Loading / Buffering Indicator -->
+    <ProgressBar
+        android:id="@+id/loading_indicator"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/secondary"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+
+    <!-- Unlock Button (Only visible when screen is locked) - Right side matching arrow & lock button -->
+    <ImageButton
+        android:id="@+id/btn_unlock"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/bg_glass_button"
+        android:src="@drawable/ic_lock"
+        android:contentDescription="Buka Kunci Layar"
+        android:visibility="gone"
+        app:tint="@color/secondary"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ================= CONTROLS OVERLAY CONTAINER ================= -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/controls_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent">
+
+        <!-- Top Action Bar with Smooth Fade-to-Center Gradient -->
+        <LinearLayout
+            android:id="@+id/top_control_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_gradient_top"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="28dp"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_glass_button"
+                android:src="@drawable/ic_arrow_back"
+                app:tint="@color/white" />
+
+            <TextView
+                android:id="@+id/tv_video_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:layout_marginEnd="10dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="[Anime] Episode 01 - The Beginning" />
+
+            <TextView
+                android:id="@+id/tv_hdr_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_badge_hdr"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:textColor="#38BDF8"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"
+                tools:text="HDR10+" />
+
+            <ImageButton
+                android:id="@+id/btn_more_options"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:background="@drawable/bg_glass_button"
+                android:contentDescription="Opsi Pemutar"
+                android:src="@drawable/ic_more_vert"
+                app:tint="@color/white" />
+        </LinearLayout>
+
+        <!-- Floating Lock Button on the Right Side (Indicated by arrow) -->
+        <ImageButton
+            android:id="@+id/btn_lock"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_glass_button"
+            android:contentDescription="Kunci Layar"
+            android:src="@drawable/ic_lock_open"
+            app:tint="@color/white"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Bottom Controls Bar with Smooth Fade-to-Center Gradient -->
+        <LinearLayout
+            android:id="@+id/bottom_control_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_gradient_bottom"
+            android:orientation="vertical"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <!-- Baris di atas garis waktu (Skip 85s, Rotasi) -->
+            <LinearLayout
+                android:id="@+id/row_above_timeline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:layout_marginBottom="0dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_skip_op_ed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:text="+85s"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_skip_next"
+                    app:iconSize="15dp"
+                    app:iconPadding="4dp"
+                    app:iconTint="@color/white"
+                    app:cornerRadius="15dp"
+                    app:backgroundTint="#33000000"
+                    app:strokeColor="@android:color/transparent"
+                    app:strokeWidth="0dp"
+                    app:rippleColor="#4DFFFFFF"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="12dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp" />
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <ImageButton
+                    android:id="@+id/btn_orientation"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:background="@drawable/bg_glass_button"
+                    android:contentDescription="@string/rotate_screen"
+                    android:src="@drawable/ic_screen_rotation"
+                    app:tint="@color/white" />
+            </LinearLayout>
+
+            <!-- Garis Waktu (Waktu Sekarang, Seekbar, Durasi Total) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="0dp">
+
+                <TextView
+                    android:id="@+id/tv_current_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:fontFeatureSettings="tnum"
+                    android:includeFontPadding="false"
+                    tools:text="00:00" />
+
+                <com.personal.animeplayer.ui.player.GlowingSeekBar
+                    android:id="@+id/seekbar_progress"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp" />
+
+                <TextView
+                    android:id="@+id/tv_total_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#D1D5DB"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif-medium"
+                    android:fontFeatureSettings="tnum"
+                    android:includeFontPadding="false"
+                    tools:text="24:00" />
+            </LinearLayout>
+
+            <!-- Baris di bawah garis waktu (Repeat di kiri, Prev/Play/Next di tengah, AspectRatio di kanan) -->
+            <RelativeLayout
+                android:id="@+id/bottom_playback_controls"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_marginTop="0dp"
+                android:layout_marginBottom="0dp">
+
+                <!-- Tanda Hijau: Ulangi Video di pojok kiri bawah -->
+                <ImageButton
+                    android:id="@+id/btn_repeat"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/bg_glass_button"
+                    android:contentDescription="Ulangi Video Otomatis"
+                    android:src="@drawable/ic_repeat"
+                    app:tint="@color/white" />
+
+                <!-- Kontrol Utama di Tengah (Sebelumnya, Play/Pause, Selanjutnya) -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/btn_prev"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginEnd="24dp"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Episode Sebelumnya"
+                        android:src="@drawable/ic_skip_previous"
+                        app:tint="@color/white" />
+
+                    <ImageButton
+                        android:id="@+id/btn_play_pause"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="@string/play"
+                        android:src="@drawable/ic_play_arrow"
+                        app:tint="@color/white" />
+
+                    <ImageButton
+                        android:id="@+id/btn_next"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_marginStart="24dp"
+                        android:padding="6dp"
+                        android:scaleType="fitCenter"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:contentDescription="Episode Selanjutnya"
+                        android:src="@drawable/ic_skip_next"
+                        app:tint="@color/white" />
+                </LinearLayout>
+
+                <!-- Tanda Merah: Layar Penuh / Rasio Aspek di pojok kanan bawah -->
+                <ImageButton
+                    android:id="@+id/btn_aspect_ratio"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/bg_glass_button"
+                    android:contentDescription="Rasio Aspek Layar"
+                    android:src="@drawable/ic_aspect_ratio"
+                    app:tint="@color/white" />
+            </RelativeLayout>
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Press & Hold Speed Control Overlay -->
+    <com.personal.animeplayer.ui.player.SpeedOverlayView
+        android:id="@+id/speed_overlay_view"
+        android:layout_width="0dp"
+        android:layout_height="76dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="98dp"
+        app:layout_constraintWidth_max="420dp"
+        android:elevation="30dp"
+        android:translationZ="30dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Inactivity / Sleep Detection Prompt Overlay -->
+    <include
+        android:id="@+id/inactivity_prompt"
+        layout="@layout/view_inactivity_prompt"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:elevation="40dp"
+        android:translationZ="40dp" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

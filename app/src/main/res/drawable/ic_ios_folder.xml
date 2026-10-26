@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+  <!-- Back flap of folder -->
+  <path
+      android:fillColor="#0A84FF"
+      android:pathData="M8,12 C8,9.79 9.79,8 12,8 L18.5,8 C20.3,8 21.9,8.9 22.8,10.4 L24.6,13.2 C25,13.7 25.6,14 26.2,14 L36,14 C38.21,14 40,15.79 40,18 L40,36 C40,38.21 38.21,40 36,40 L12,40 C9.79,40 8,38.21 8,36 Z"/>
+  <!-- Front flap of folder (lighter tint) -->
+  <path
+      android:fillColor="#409CFF"
+      android:pathData="M8,20 C8,17.79 9.79,16 12,16 L36,16 C38.21,16 40,17.79 40,20 L40,36 C40,38.21 38.21,40 36,40 L12,40 C9.79,40 8,38.21 8,36 Z"/>
+  <!-- Subtle top sheen highlight on front flap -->
+  <path
+      android:fillColor="#80BFFF"
+      android:pathData="M12,16 L36,16 C38.21,16 40,17.79 40,20 L40,21 C40,18.79 38.21,17 36,17 L12,17 C9.79,17 8,18.79 8,21 L8,20 C8,17.79 9.79,16 12,16 Z"/>
+</vector>

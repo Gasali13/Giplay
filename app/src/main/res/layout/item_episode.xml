@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card_video_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="6dp"
+    android:layout_marginEnd="6dp"
+    android:layout_marginTop="1dp"
+    android:layout_marginBottom="1dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:strokeColor="@android:color/transparent"
+    app:strokeWidth="0dp"
+    app:rippleColor="#26FFFFFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="8dp">
+
+        <!-- Thumbnail Container (Rounded 10dp squircle, 16:9 ratio, enlarged to 142x80dp) -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="142dp"
+            android:layout_height="80dp"
+            app:cardBackgroundColor="#101216"
+            app:cardCornerRadius="10dp"
+            app:cardElevation="0dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/iv_episode_thumb"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_play_arrow"
+                    app:tint="@color/on_surface_muted" />
+
+                <!-- Duration Badge on bottom-right of thumbnail -->
+                <TextView
+                    android:id="@+id/tv_episode_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginEnd="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:background="@drawable/bg_thumb_duration_pill"
+                    android:fontFamily="sans-serif-medium"
+                    android:includeFontPadding="false"
+                    android:paddingStart="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingEnd="6dp"
+                    android:paddingBottom="2dp"
+                    android:textColor="@color/white"
+                    android:textSize="11sp"
+                    tools:text="00.30" />
+
+                <!-- Watch Progress Line at the very bottom of thumbnail -->
+                <com.google.android.material.progressindicator.LinearProgressIndicator
+                    android:id="@+id/indicator_watch_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="3.5dp"
+                    android:layout_gravity="bottom"
+                    android:visibility="gone"
+                    app:indicatorColor="@color/secondary"
+                    app:trackColor="#4D000000"
+                    app:trackCornerRadius="0dp"
+                    app:trackStopIndicatorSize="0dp"
+                    app:indicatorTrackGapSize="0dp"
+                    tools:progress="50"
+                    tools:visibility="visible" />
+
+            </FrameLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Information Column (Title + Metadata Subtitle) -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <!-- Title / Filename (Single line) -->
+            <TextView
+                android:id="@+id/tv_episode_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                tools:text="Mobile Legends Highlight 12 Okt" />
+
+            <!-- Subtitle / Metadata (Date, File Size, etc.) -->
+            <TextView
+                android:id="@+id/tv_episode_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif"
+                android:maxLines="1"
+                android:textColor="#94A3B8"
+                android:textSize="12.5sp"
+                tools:text="12 Okt 2026 • 450 MB" />
+
+        </LinearLayout>
+
+        <!-- Selection CheckBox (shown only during multi-selection mode) -->
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/cb_select"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:clickable="false"
+            android:focusable="false"
+            android:visibility="gone"
+            app:buttonTint="@color/primary"
+            tools:visibility="visible" />
+
+        <!-- 3-Dot More Options Button (Vertical 3 dots) -->
+        <ImageButton
+            android:id="@+id/btn_episode_more"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Opsi Lainnya"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_more_vert"
+            app:tint="#94A3B8" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

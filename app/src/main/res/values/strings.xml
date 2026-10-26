@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Giplay</string>
+    <string name="search_hint">Cari...</string>
+    <string name="sort_by">Urutkan Berdasarkan</string>
+    <string name="sort_name">Nama (A - Z)</string>
+    <string name="sort_newest">Waktu Terbaru</string>
+    <string name="sort_oldest">Waktu Terlama</string>
+    <string name="rotate_screen">Putar Layar</string>
+    <string name="play">Putar</string>
+    <string name="no_episodes_found">Tidak ada episode video ditemukan</string>
+    <string name="playback_speed">Kecepatan Putar</string>
+    <string name="subtitles">Subtitle</string>
+    <string name="audio_tracks">Trek Audio</string>
+    <string name="subtitle_sync">Sinkronisasi Subtitle (Offset)</string>
+    <string name="subtitle_style">Kustomisasi Tampilan Subtitle</string>
+</resources>

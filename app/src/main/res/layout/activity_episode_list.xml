@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/black"
+        android:elevation="0dp"
+        app:backgroundTint="@color/black"
+        app:elevation="0dp"
+        app:liftOnScroll="false"
+        app:liftOnScrollColor="@color/black"
+        app:statusBarForeground="@color/black">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Selection Mode Header (visible only during multi-selection) -->
+            <LinearLayout
+                android:id="@+id/layout_selection_header"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageButton
+                    android:id="@+id/btn_close_selection"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_glass_button"
+                    android:contentDescription="Tutup Seleksi"
+                    android:padding="9dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_close"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:id="@+id/tv_selection_count"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="14dp"
+                    android:layout_weight="1"
+                    android:textColor="@color/white"
+                    android:textSize="17sp"
+                    android:textStyle="bold"
+                    tools:text="1 dipilih" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_select_all"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="Pilih Semua"
+                    android:textColor="@color/secondary"
+                    android:textSize="13sp" />
+
+                <ImageButton
+                    android:id="@+id/btn_delete_selected"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_control_circle"
+                    android:backgroundTint="#26FF5252"
+                    android:contentDescription="Hapus Video Terpilih"
+                    android:padding="9dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_delete"
+                    app:tint="#FF5252" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layout_normal_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btn_back_episodes"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_glass_button"
+                    android:src="@drawable/ic_arrow_back"
+                    app:tint="@color/white" />
+
+                <TextView
+                    android:id="@+id/tv_series_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    tools:text="Sousou no Frieren" />
+
+                <ImageButton
+                    android:id="@+id/btn_search_episode"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="6dp"
+                    android:background="@drawable/bg_glass_button"
+                    android:contentDescription="@string/search_hint"
+                    android:padding="9dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_search"
+                    app:tint="@color/white" />
+
+                <ImageButton
+                    android:id="@+id/btn_sort_episode"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:background="@drawable/bg_glass_button"
+                    android:contentDescription="@string/sort_by"
+                    android:padding="9dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/ic_sort"
+                    app:tint="@color/white" />
+            </LinearLayout>
+
+            <!-- iOS Style Search Capsule Field Container -->
+            <FrameLayout
+                android:id="@+id/container_search_episode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:clipChildren="true">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/til_search_episode"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    app:boxCornerRadiusBottomEnd="22dp"
+                    app:boxCornerRadiusBottomStart="22dp"
+                    app:boxCornerRadiusTopEnd="22dp"
+                    app:boxCornerRadiusTopStart="22dp"
+                    app:boxBackgroundColor="#1C1C1E"
+                    app:boxStrokeColor="@android:color/transparent"
+                    app:boxStrokeWidth="0dp"
+                    app:boxStrokeWidthFocused="0dp"
+                    app:endIconMode="clear_text"
+                    app:endIconTint="#8E8E93"
+                    app:startIconDrawable="@drawable/ic_search"
+                    app:startIconTint="#8E8E93"
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/et_search_episode"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:hint="Cari nomor atau judul episode..."
+                        android:inputType="text"
+                        android:paddingTop="10dp"
+                        android:paddingBottom="10dp"
+                        android:textColor="@color/white"
+                        android:textColorHint="#8E8E93"
+                        android:textSize="14sp" />
+                </com.google.android.material.textfield.TextInputLayout>
+            </FrameLayout>
+        </LinearLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipe_refresh_episodes"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rv_episodes"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:paddingTop="4dp"
+                android:paddingBottom="16dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                tools:listitem="@layout/item_episode" />
+
+            <ProgressBar
+                android:id="@+id/progress_loading_episodes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tv_no_episodes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/no_episodes_found"
+                android:textColor="@color/on_surface_muted"
+                android:visibility="gone" />
+        </FrameLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <!-- Floating Scroll-To-Top Button -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_scroll_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="24dp"
+        android:contentDescription="Langsung ke paling atas"
+        android:src="@drawable/ic_arrow_upward"
+        android:visibility="gone"
+        app:backgroundTint="#1E293B"
+        app:borderWidth="1.5dp"
+        app:elevation="6dp"
+        app:fabCustomSize="46dp"
+        app:maxImageSize="22dp"
+        app:rippleColor="#4038BDF8"
+        app:strokeColor="@color/secondary"
+        app:tint="@color/secondary" />
+
+    <!-- Alphabet Fast Scroll Bar (A-Z) (Dynamically centered between header and bottom) -->
+    <com.personal.animeplayer.ui.library.AlphabetIndexView
+        android:id="@+id/alphabet_index_view"
+        android:layout_width="22dp"
+        android:layout_height="440dp"
+        android:layout_gravity="top|end"
+        android:layout_marginEnd="4dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:elevation="4dp"
+        android:visibility="gone" />
+
+    <!-- Floating Alphabet Preview Bubble -->
+    <TextView
+        android:id="@+id/tv_alphabet_bubble"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="top|end"
+        android:layout_marginEnd="48dp"
+        android:background="@drawable/bg_alphabet_bubble"
+        android:gravity="center"
+        android:textColor="@color/secondary"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:elevation="12dp"
+        android:visibility="gone" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

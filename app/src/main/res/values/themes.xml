@@ -1,0 +1,135 @@
+<resources>
+    <!-- Base Application Theme -->
+    <style name="Theme.AniPlay" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorOnSecondary">@color/on_secondary</item>
+        <item name="android:colorBackground">@color/black</item>
+        <item name="colorSurface">@color/black</item>
+        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorSurfaceContainer">@color/black</item>
+        <item name="colorSurfaceContainerHigh">@color/black</item>
+        <item name="colorSurfaceContainerHighest">@color/black</item>
+        <item name="colorSurfaceContainerLow">@color/black</item>
+        <item name="colorSurfaceContainerLowest">@color/black</item>
+        <item name="elevationOverlayEnabled">false</item>
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="popupMenuBackground">@drawable/bg_popup_menu</item>
+        <item name="android:popupElevation">8dp</item>
+        <item name="materialAlertDialogTheme">@style/Theme.AniPlay.Dialog</item>
+        <item name="alertDialogTheme">@style/Theme.AniPlay.Dialog</item>
+        <item name="android:windowAnimationStyle">@style/Animation.AniPlay.Folder</item>
+    </style>
+
+    <!-- Material Alert Dialog Theme -->
+    <style name="Theme.AniPlay.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:background">@drawable/bg_glass_dialog</item>
+        <item name="colorSurface">#1B1C1E</item>
+        <item name="colorSurfaceContainer">#1B1C1E</item>
+        <item name="colorSurfaceContainerHigh">#1B1C1E</item>
+        <item name="colorSurfaceContainerHighest">#25262A</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.AniPlay.Dialog</item>
+    </style>
+
+    <style name="ShapeAppearance.AniPlay.Dialog" parent="">
+        <item name="cornerSize">20dp</item>
+    </style>
+
+    <!-- Immersive Video Player Theme -->
+    <style name="Theme.AniPlay.Player" parent="Theme.AniPlay">
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:keepScreenOn">true</item>
+        <item name="android:statusBarColor">@color/transparent</item>
+        <item name="android:navigationBarColor">@color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowAnimationStyle">@style/Animation.AniPlay.Player</item>
+        <item name="bottomSheetDialogTheme">@style/Theme.AniPlay.BottomSheetDialog</item>
+    </style>
+
+    <!-- Video Player Activity Smooth Transition Animations -->
+    <style name="Animation.AniPlay.Player" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/player_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/player_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/player_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/player_close_exit</item>
+    </style>
+
+    <!-- Folder/Library Navigation Smooth Transition Animations -->
+    <style name="Animation.AniPlay.Folder" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/folder_open_enter</item>
+        <item name="android:activityOpenExitAnimation">@anim/folder_open_exit</item>
+        <item name="android:activityCloseEnterAnimation">@anim/folder_close_enter</item>
+        <item name="android:activityCloseExitAnimation">@anim/folder_close_exit</item>
+    </style>
+
+    <!-- Folder Activity Theme -->
+    <style name="Theme.AniPlay.Folder" parent="Theme.AniPlay">
+        <item name="android:windowAnimationStyle">@style/Animation.AniPlay.Folder</item>
+    </style>
+
+    <!-- Side Sheet Animation for Landscape Dialogs -->
+    <style name="Animation.SideSheet" parent="@android:style/Animation.Dialog">
+        <item name="android:windowEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:windowExitAnimation">@anim/slide_out_right</item>
+    </style>
+
+    <!-- Side Sheet Theme for Landscape Mode -->
+    <style name="Theme.AniPlay.SideSheet" parent="Theme.Material3.Dark.Dialog">
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/Animation.SideSheet</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+    </style>
+
+    <!-- Full-Width Edge-To-Edge Bottom Sheet Dialog Theme -->
+    <style name="Theme.AniPlay.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:colorBackground">@color/transparent</item>
+        <item name="android:navigationBarColor">@color/bs_background</item>
+        <item name="bottomSheetStyle">@style/Widget.AniPlay.BottomSheet</item>
+        <item name="enableEdgeToEdge">true</item>
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSurface">@color/bs_background</item>
+        <item name="colorSurfaceContainer">@color/bs_background</item>
+        <item name="colorSurfaceContainerHigh">#25262A</item>
+        <item name="colorSurfaceContainerHighest">#2C2E34</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorOutline">@color/primary</item>
+    </style>
+
+    <style name="Widget.AniPlay.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@color/bs_background</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.AniPlay.BottomSheet</item>
+        <item name="android:elevation">0dp</item>
+        <item name="behavior_fitToContents">true</item>
+        <item name="behavior_hideable">true</item>
+        <item name="behavior_skipCollapsed">true</item>
+    </style>
+
+    <style name="ShapeAppearance.AniPlay.BottomSheet" parent="ShapeAppearance.Material3.Corner.None">
+        <item name="cornerSizeTopLeft">18dp</item>
+        <item name="cornerSizeTopRight">18dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+
+    <!-- Chip Style for Bottom Sheets and Dialogs -->
+    <style name="Widget.AniPlay.Chip.Choice" parent="Widget.Material3.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_bg_selector</item>
+        <item name="chipStrokeColor">@color/chip_stroke_selector</item>
+        <item name="chipStrokeWidth">1.2dp</item>
+        <item name="android:textColor">@color/chip_text_selector</item>
+        <item name="chipCornerRadius">12dp</item>
+        <item name="checkedIconVisible">false</item>
+    </style>
+</resources>

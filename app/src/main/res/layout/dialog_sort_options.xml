@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_bottom_sheet_video"
+    android:orientation="vertical"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="24dp">
+
+    <!-- Top Drag Handle Pill -->
+    <View
+        android:layout_width="38dp"
+        android:layout_height="4.5dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/bg_sheet_drag_handle" />
+
+    <!-- Header with Icon, Title, and Close Button -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_control_circle">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_sort"
+                app:tint="@color/secondary" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Urutkan Video"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Pilih urutan tampilan daftar video"
+                android:textColor="#94A3B8"
+                android:textSize="12.5sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/btn_close_sort"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_glass_button"
+            android:contentDescription="Tutup"
+            android:src="@drawable/ic_close"
+            app:tint="#94A3B8" />
+    </LinearLayout>
+
+    <!-- Option 1: Nama (A - Z) -->
+    <LinearLayout
+        android:id="@+id/layout_sort_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_sort_option_normal"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp">
+
+        <FrameLayout
+            android:id="@+id/layout_icon_sort_name"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_sort_icon_normal">
+
+            <ImageView
+                android:id="@+id/iv_icon_sort_name"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_sort_az"
+                app:tint="#94A3B8" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_title_sort_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sort_name"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Berdasarkan abjad judul video"
+                android:textColor="#8E8E93"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/layout_check_sort_name"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="@drawable/bg_check_unselected">
+
+            <ImageView
+                android:id="@+id/iv_check_sort_name"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check"
+                android:visibility="gone"
+                app:tint="@color/white"
+                tools:visibility="visible" />
+        </FrameLayout>
+
+        <!-- Hidden RadioButton for backward compatibility -->
+        <RadioButton
+            android:id="@+id/rb_sort_name"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Option 2: Waktu Terbaru -->
+    <LinearLayout
+        android:id="@+id/layout_sort_newest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_sort_option_normal"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp">
+
+        <FrameLayout
+            android:id="@+id/layout_icon_sort_newest"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_sort_icon_normal">
+
+            <ImageView
+                android:id="@+id/iv_icon_sort_newest"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_sort_newest"
+                app:tint="#94A3B8" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_title_sort_newest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sort_newest"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Video yang baru saja ditambahkan"
+                android:textColor="#8E8E93"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/layout_check_sort_newest"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="@drawable/bg_check_unselected">
+
+            <ImageView
+                android:id="@+id/iv_check_sort_newest"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check"
+                android:visibility="gone"
+                app:tint="@color/white"
+                tools:visibility="visible" />
+        </FrameLayout>
+
+        <!-- Hidden RadioButton for backward compatibility -->
+        <RadioButton
+            android:id="@+id/rb_sort_newest"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Option 3: Waktu Terlama -->
+    <LinearLayout
+        android:id="@+id/layout_sort_oldest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_sort_option_normal"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="12dp">
+
+        <FrameLayout
+            android:id="@+id/layout_icon_sort_oldest"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:background="@drawable/bg_sort_icon_normal">
+
+            <ImageView
+                android:id="@+id/iv_icon_sort_oldest"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_sort_oldest"
+                app:tint="#94A3B8" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_title_sort_oldest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sort_oldest"
+                android:textColor="@color/white"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif-medium"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="Video dari urutan tanggal terlama"
+                android:textColor="#8E8E93"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/layout_check_sort_oldest"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:background="@drawable/bg_check_unselected">
+
+            <ImageView
+                android:id="@+id/iv_check_sort_oldest"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check"
+                android:visibility="gone"
+                app:tint="@color/white"
+                tools:visibility="visible" />
+        </FrameLayout>
+
+        <!-- Hidden RadioButton for backward compatibility -->
+        <RadioButton
+            android:id="@+id/rb_sort_oldest"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <!-- Modern Full-Width Primary Action Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_apply_sort"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="@color/primary"
+        android:text="Terapkan Urutan"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        android:fontFamily="sans-serif-medium"
+        android:textStyle="bold"
+        app:cornerRadius="16dp" />
+
+    <!-- Hidden Cancel Button kept for backwards compatibility -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_cancel_sort"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+</LinearLayout>
