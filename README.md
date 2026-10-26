@@ -7,7 +7,7 @@
 
 ---
 
-## 💡 Inspirasi Pengembangan
+## 💡 Inspirasi
 
 - Referensi sebagian besar **MX Player**
 
