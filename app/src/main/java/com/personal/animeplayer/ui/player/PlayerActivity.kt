@@ -1454,7 +1454,12 @@ class PlayerActivity : AppCompatActivity(), GestureListener {
         binding.btnUnlock.animate().cancel()
         binding.btnUnlock.visibility = View.GONE
         binding.gestureOverlay.visibility = View.VISIBLE
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
+        val currentOrientation = resources.configuration.orientation
+        requestedOrientation = if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+            ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
         showControls()
     }
 
