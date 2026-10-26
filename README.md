@@ -9,7 +9,6 @@
 
 ## 💡 Inspirasi & Pengembangan
 
-- 🤖 **Dibangun Menggunakan Antigravity:** Proyek ini dikembangkan, diaudit, dan dioptimalkan secara kolaboratif menggunakan **Google Antigravity**.
 - Referensi sebagian besar **MX Player**
 
 ---
