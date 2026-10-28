@@ -2161,14 +2161,14 @@ class PlayerActivity : AppCompatActivity(), GestureListener {
     override fun onStop() {
         super.onStop()
         handler.removeCallbacks(updateProgressRunnable)
-        val wasInPip = isPipMode || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode)
+        val wasInPip = isPipMode || isInPictureInPictureMode
         if (wasInPip) {
             isPipMode = false
             finish()
         }
         // onStop() menandakan jendela aktivitas tidak lagi tampil sama sekali di layar (misal user ke Home tanpa PiP, atau layar mati).
         // Jeda pemutaran audio/video jika tidak dalam mode PiP!
-        if (!isPipMode && (Build.VERSION.SDK_INT < Build.VERSION_CODES.N || !isInPictureInPictureMode)) {
+        if (!isPipMode && !isInPictureInPictureMode) {
             pauseAllEngines(stopPlayback = isFinishing)
         }
     }

@@ -27,4 +27,27 @@ class NaturalOrderComparatorTest {
 
         assertEquals(expected, sortedList)
     }
+
+    @Test
+    fun testLeadingZerosAndSuffixSorting() {
+        val rawList = listOf(
+            "Episode 1 Special",
+            "Episode 0001",
+            "Episode 1",
+            "Episode 01",
+            "Episode 2"
+        )
+
+        val sortedList = rawList.sortedWith(NaturalOrderComparator())
+
+        val expected = listOf(
+            "Episode 1",
+            "Episode 01",
+            "Episode 0001",
+            "Episode 1 Special",
+            "Episode 2"
+        )
+
+        assertEquals(expected, sortedList)
+    }
 }

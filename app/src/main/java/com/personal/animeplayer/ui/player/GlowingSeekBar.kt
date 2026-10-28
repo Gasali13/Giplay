@@ -49,6 +49,11 @@ class GlowingSeekBar @JvmOverloads constructor(
     // Elastic chasing physics state
     private var chasingGlowX = -1f
 
+    // Preallocated gradient buffers for zero object allocation in onDraw
+    private val gradientPositions = floatArrayOf(0f, 0.45f, 1f)
+    private val glowColors = IntArray(3)
+    private val tipBloomColors = IntArray(3)
+
     // 1. Background Track: Dark navy translucent with rounded caps
     private val bgTrackPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
@@ -166,12 +171,20 @@ class GlowingSeekBar @JvmOverloads constructor(
                     val newProgress = calculateProgress(event.x, trackStartX, availableTrackWidth, maxVal)
                     progress = newProgress
                     changeListener?.onStopTrackingTouch(this)
+                    if (event.action == MotionEvent.ACTION_UP) {
+                        performClick()
+                    }
                     postInvalidateOnAnimation()
                     return true
                 }
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
     }
 
     private fun calculateProgress(touchX: Float, trackStartX: Float, availWidth: Float, maxVal: Int): Int {
@@ -228,14 +241,13 @@ class GlowingSeekBar @JvmOverloads constructor(
                 // Digeser ke KANAN atau diam: Ekor glow tertinggal di sebelah kiri mengejar ke kanan
                 val glowStartX = (chasingGlowX - currentGlowTrail).coerceAtLeast(trackStartX)
                 if (currentHeadX > glowStartX) {
+                    glowColors[0] = Color.argb(0, 0, 140, 255)
+                    glowColors[1] = Color.argb((75 * glowIntensityScale).toInt().coerceIn(0, 255), 0, 160, 255)
+                    glowColors[2] = Color.argb((200 * glowIntensityScale).toInt().coerceIn(0, 255), 56, 189, 248)
                     glowTrailPaint.shader = LinearGradient(
                         glowStartX, centerY, currentHeadX, centerY,
-                        intArrayOf(
-                            Color.argb(0, 0, 140, 255),
-                            Color.argb((75 * glowIntensityScale).toInt().coerceIn(0, 255), 0, 160, 255),
-                            Color.argb((200 * glowIntensityScale).toInt().coerceIn(0, 255), 56, 189, 248)
-                        ),
-                        floatArrayOf(0f, 0.45f, 1f),
+                        glowColors,
+                        gradientPositions,
                         Shader.TileMode.CLAMP
                     )
                     canvas.drawLine(glowStartX, centerY, currentHeadX, centerY, glowTrailPaint)
@@ -244,14 +256,13 @@ class GlowingSeekBar @JvmOverloads constructor(
                 // Digeser ke KIRI: Ekor glow tertinggal di sebelah kanan mengejar ke kiri
                 val glowEndX = (chasingGlowX + currentGlowTrail).coerceAtMost(trackEndX)
                 if (glowEndX > currentHeadX) {
+                    glowColors[0] = Color.argb(0, 0, 140, 255)
+                    glowColors[1] = Color.argb((75 * glowIntensityScale).toInt().coerceIn(0, 255), 0, 160, 255)
+                    glowColors[2] = Color.argb((200 * glowIntensityScale).toInt().coerceIn(0, 255), 56, 189, 248)
                     glowTrailPaint.shader = LinearGradient(
                         glowEndX, centerY, currentHeadX, centerY,
-                        intArrayOf(
-                            Color.argb(0, 0, 140, 255),
-                            Color.argb((75 * glowIntensityScale).toInt().coerceIn(0, 255), 0, 160, 255),
-                            Color.argb((200 * glowIntensityScale).toInt().coerceIn(0, 255), 56, 189, 248)
-                        ),
-                        floatArrayOf(0f, 0.45f, 1f),
+                        glowColors,
+                        gradientPositions,
                         Shader.TileMode.CLAMP
                     )
                     canvas.drawLine(currentHeadX, centerY, glowEndX, centerY, glowTrailPaint)
@@ -260,14 +271,13 @@ class GlowingSeekBar @JvmOverloads constructor(
 
             // 3. Compact Radial Bloom right around the rounded tip
             val tipRadius = currentGlowRadius
+            tipBloomColors[0] = Color.argb((215 * glowIntensityScale).toInt().coerceIn(0, 255), 56, 189, 248)
+            tipBloomColors[1] = Color.argb((115 * glowIntensityScale).toInt().coerceIn(0, 255), 0, 140, 255)
+            tipBloomColors[2] = Color.argb(0, 0, 90, 240)
             tipBloomPaint.shader = RadialGradient(
                 currentHeadX, centerY, tipRadius,
-                intArrayOf(
-                    Color.argb((215 * glowIntensityScale).toInt().coerceIn(0, 255), 56, 189, 248),
-                    Color.argb((115 * glowIntensityScale).toInt().coerceIn(0, 255), 0, 140, 255),
-                    Color.argb(0, 0, 90, 240)
-                ),
-                floatArrayOf(0f, 0.45f, 1f),
+                tipBloomColors,
+                gradientPositions,
                 Shader.TileMode.CLAMP
             )
             canvas.drawCircle(currentHeadX, centerY, tipRadius, tipBloomPaint)

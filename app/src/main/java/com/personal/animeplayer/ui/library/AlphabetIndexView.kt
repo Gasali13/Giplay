@@ -110,12 +110,20 @@ class AlphabetIndexView @JvmOverloads constructor(
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 parent?.requestDisallowInterceptTouchEvent(false)
                 isDragging = false
+                if (event.action == MotionEvent.ACTION_UP) {
+                    performClick()
+                }
                 onLetterReleased?.invoke()
                 invalidate()
                 return true
             }
         }
         return super.onTouchEvent(event)
+    }
+
+    override fun performClick(): Boolean {
+        super.performClick()
+        return true
     }
 
     /**
