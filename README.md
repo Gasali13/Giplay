@@ -7,20 +7,16 @@
 
 ---
 
-## 💡 Inspirasi
-
-- Referensi sebagian besar **MX Player**
-
----
-
 ## 🛠️ Spesifikasi Teknis
 
-- **Bahasa:** Kotlin
+- **Bahasa:** Kotlin 2.0.21
 - **Minimum SDK:** Android 7.0 (API Level 24)
 - **Target SDK:** Android 15 (API Level 35)
 - **Arsitektur:** MVVM (Model-View-ViewModel) dengan Kotlin Coroutines & Flow
 - **Penyimpanan Lokal:** Room Database & DataStore Preferences
-- **Build System:** Gradle Kotlin DSL (KSP)
+- **Build System:** Gradle 8.10.2 + AGP 8.7.3 (Gradle Version Catalog `libs.versions.toml`)
+- **Engine Pemutar:** AndroidX Media3 1.5.1 & MPV Android Lib 0.1.12
+- **Arsitektur CPU:** `arm64-v8a` (APK teroptimasi ~45 MB)
 
 ---
 
