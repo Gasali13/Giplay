@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AnimePlayer"
+rootProject.name = "Giplay"
 include(":app")
