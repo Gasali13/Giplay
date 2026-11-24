@@ -1,16 +1,95 @@
 <resources>
     <string name="app_name">Giplay</string>
-    <string name="search_hint">Cari...</string>
+    <string name="search_hint">Cari…</string>
     <string name="sort_by">Urutkan Berdasarkan</string>
     <string name="sort_name">Nama (A - Z)</string>
     <string name="sort_newest">Waktu Terbaru</string>
     <string name="sort_oldest">Waktu Terlama</string>
     <string name="rotate_screen">Putar Layar</string>
     <string name="play">Putar</string>
-    <string name="no_episodes_found">Tidak ada episode video ditemukan</string>
     <string name="playback_speed">Kecepatan Putar</string>
     <string name="subtitles">Subtitle</string>
     <string name="audio_tracks">Trek Audio</string>
     <string name="subtitle_sync">Sinkronisasi Subtitle (Offset)</string>
     <string name="subtitle_style">Kustomisasi Tampilan Subtitle</string>
+
+    <!-- Common Actions & Accessibility -->
+    <string name="action_back">Kembali</string>
+    <string name="action_close">Tutup</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_delete">Hapus</string>
+    <string name="action_save">Simpan</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_select_all">Pilih Semua</string>
+    <string name="action_rescan">Pindai Ulang</string>
+    <string name="action_rename">Ubah Nama</string>
+    <string name="action_share">Bagikan</string>
+    <string name="action_video_info_full">Info Video Lengkap</string>
+    <string name="action_more_options">Opsi Lainnya</string>
+    <string name="cd_close_selection">Tutup Seleksi</string>
+    <string name="cd_delete_selected">Hapus Video Terpilih</string>
+    <string name="cd_scroll_to_top">Langsung ke paling atas</string>
+    <string name="cd_app_logo">Giplay Logo</string>
+
+    <!-- Library, Episode List & Splash -->
+    <string name="search_episode_hint">Cari nomor atau judul episode…</string>
+    <string name="splash_subtitle">Ultra Video Player</string>
+    <string name="splash_slogan">Fast • Pure • Immersive</string>
+
+    <!-- Player Controls -->
+    <string name="cd_unlock_screen">Buka Kunci Layar</string>
+    <string name="cd_lock_screen">Kunci Layar</string>
+    <string name="cd_player_options">Opsi Pemutar</string>
+    <string name="cd_repeat_video">Ulangi Video Otomatis</string>
+    <string name="cd_prev_episode">Episode Sebelumnya</string>
+    <string name="cd_next_episode">Episode Selanjutnya</string>
+    <string name="cd_aspect_ratio">Rasio Aspek Layar</string>
+    <string name="skip_op_ed_label">+85s</string>
+
+    <!-- Bottom Sheet: Aspect Ratio -->
+    <string name="aspect_ratio_title">Rasio Aspek &amp; Layar</string>
+    <string name="aspect_ratio_fit">Fit Layar (Asli)</string>
+    <string name="aspect_ratio_stretch">Regangkan Penuh</string>
+    <string name="aspect_ratio_zoom">Zoom Penuh (100% Layar)</string>
+    <string name="aspect_ratio_16_9">16:9 Standar</string>
+    <string name="aspect_ratio_4_3">4:3 Klasik</string>
+
+    <!-- Bottom Sheet: Player Options -->
+    <string name="player_options_title">Opsi Pemutar</string>
+    <string name="audio_tracks_desc">Pilih bahasa suara / trek audio</string>
+    <string name="subtitle_and_style">Subtitle &amp; Gaya</string>
+    <string name="subtitle_and_style_desc">Pilih subtitle, muat berkas, &amp; atur skala</string>
+    <string name="pip_title">Picture-in-Picture</string>
+    <string name="pip_desc">Putar video di jendela mengambang</string>
+    <string name="skip_op_ed_title">Tombol Lewati 85 Detik</string>
+    <string name="delete_video_title">Hapus Video</string>
+    <string name="delete_video_option_desc">Hapus berkas permanen &amp; putar selanjutnya</string>
+
+    <!-- Bottom Sheet: Subtitle Style & Tracks -->
+    <string name="sub_offset_minus">-0.5s</string>
+    <string name="sub_offset_plus">+0.5s</string>
+    <string name="load_external_sub">Muat File Subtitle</string>
+    <string name="custom_style_and_sync">Kustomisasi &amp; Sync</string>
+
+    <!-- Dialogs: Rename, Sort, Video Info -->
+    <string name="dialog_rename_title">Ubah Nama Video</string>
+    <string name="dialog_rename_desc">Masukkan nama baru untuk video ini:</string>
+    <string name="dialog_rename_hint">Nama video baru…</string>
+    <string name="dialog_sort_title">Urutkan Video</string>
+    <string name="dialog_info_title">Informasi Video</string>
+    <string name="info_label_filename">Nama File</string>
+    <string name="info_label_path">Lokasi Penyimpanan</string>
+    <string name="info_label_size">Ukuran File</string>
+    <string name="info_label_duration">Durasi</string>
+    <string name="info_label_resolution">Resolusi</string>
+    <string name="info_label_mime">Format / MIME</string>
+    <string name="info_label_hdr">Rentang Dinamis (HDR)</string>
+    <string name="info_label_color">Gamut &amp; Transfer Warna</string>
+    <string name="info_label_bitrate">Bitrate</string>
+    <string name="info_label_date">Ditambahkan</string>
+
+    <!-- Inactivity Prompt -->
+    <string name="inactivity_title">Masih Nonton?</string>
+    <string name="inactivity_desc">Pemutaran telah berjalan selama 60 menit tanpa sentuhan layar. Aplikasi akan keluar otomatis dalam 30 detik untuk menghemat baterai.</string>
+    <string name="inactivity_continue">Lanjut Nonton</string>
 </resources>

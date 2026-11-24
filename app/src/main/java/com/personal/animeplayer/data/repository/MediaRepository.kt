@@ -54,15 +54,21 @@ class MediaRepository(private val context: Context) {
         val bucketNames = mutableMapOf<String, String>()
         val allVideosList = mutableListOf<Episode>()
 
-        val projection = arrayOf(
-            MediaStore.Video.Media._ID,
-            MediaStore.Video.Media.DISPLAY_NAME,
-            MediaStore.Video.Media.BUCKET_ID,
-            MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
-            MediaStore.Video.Media.DURATION,
-            MediaStore.Video.Media.SIZE,
-            MediaStore.Video.Media.DATE_ADDED
-        )
+        val projection = buildList {
+            add(MediaStore.Video.Media._ID)
+            add(MediaStore.Video.Media.DISPLAY_NAME)
+            add(MediaStore.Video.Media.BUCKET_ID)
+            add(MediaStore.Video.Media.BUCKET_DISPLAY_NAME)
+            add(MediaStore.Video.Media.DURATION)
+            add(MediaStore.Video.Media.SIZE)
+            add(MediaStore.Video.Media.DATE_ADDED)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                add(MediaStore.MediaColumns.IS_PENDING)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                add(MediaStore.MediaColumns.IS_TRASHED)
+            }
+        }.toTypedArray()
 
         val sortOrder = "${MediaStore.Video.Media.BUCKET_DISPLAY_NAME} ASC, ${MediaStore.Video.Media.DISPLAY_NAME} ASC"
 
@@ -108,7 +114,7 @@ class MediaRepository(private val context: Context) {
                         val isShort = effectiveDuration in 1 until 60_000L
                         val episode = Episode(
                             uri = contentUri,
-                            title = FileUtils.getBaseName(fileName),
+                            title = FileUtils.getDisplayTitle(fileName),
                             fileName = fileName,
                             seriesFolderUri = "mediastore://folder/$bucketId",
                             durationMs = effectiveDuration,
@@ -135,96 +141,13 @@ class MediaRepository(private val context: Context) {
             val latestDate = episodes.maxOfOrNull { it.dateAdded } ?: 0L
             AnimeSeries(
                 folderUri = "mediastore://folder/$bucketId",
-                name = bucketNames[bucketId] ?: "Folder Video",
+                name = bucketNames[bucketId]?.let { FileUtils.decodePercentEncoded(it) } ?: "Folder Video",
                 episodeCount = sorted.size,
-                firstEpisodeUri = sorted.firstOrNull()?.uri,
                 lastModified = latestDate
             )
         }.sortedWith { s1, s2 -> naturalOrderComparator.compare(s1.name, s2.name) }
 
         MediaScanResult(allVideos = allVideosList, folders = folders)
-    }
-
-    /**
-     * Scans the user-selected SAF root folder on-demand.
-     * Returns MediaScanResult containing all videos found and subfolders as series.
-     */
-    suspend fun scanAnimeLibrary(rootFolderUri: Uri): MediaScanResult = withContext(Dispatchers.IO) {
-        val rootDoc = DocumentFile.fromTreeUri(context, rootFolderUri) ?: return@withContext MediaScanResult()
-        if (!rootDoc.isDirectory) return@withContext MediaScanResult()
-
-        val progressMap = try {
-            progressDao.getAllProgress().associateBy { it.videoUri }
-        } catch (e: Exception) {
-            emptyMap()
-        }
-
-        val seriesList = mutableListOf<AnimeSeries>()
-        val allVideosList = mutableListOf<Episode>()
-
-        rootDoc.listFiles().forEach { file ->
-            if (file.isDirectory) {
-                val subEpisodes = mutableListOf<Episode>()
-                file.listFiles().forEach { subFile ->
-                    if (subFile.isFile && subFile.name?.let { FileUtils.isSupportedVideoFile(it) } == true) {
-                        val uriStr = subFile.uri.toString()
-                        if (PlaylistHolder.deletedUris.contains(uriStr)) return@forEach
-                        val fileName = subFile.name ?: "Video"
-                        val progress = progressMap[uriStr]
-                        val effectiveDuration = progress?.durationMs ?: 0L
-                        val isShort = effectiveDuration in 1 until 60_000L
-                        subEpisodes.add(
-                            Episode(
-                                uri = uriStr,
-                                title = FileUtils.getBaseName(fileName),
-                                fileName = fileName,
-                                seriesFolderUri = file.uri.toString(),
-                                durationMs = effectiveDuration,
-                                lastPositionMs = if (isShort) 0L else (progress?.lastPositionMs ?: 0L),
-                                progressPercentage = if (isShort) 0 else (progress?.progressPercentage ?: 0),
-                                fileSize = subFile.length()
-                            )
-                        )
-                    }
-                }
-                if (subEpisodes.isNotEmpty()) {
-                    subEpisodes.sortWith { e1, e2 -> naturalOrderComparator.compare(e1.fileName, e2.fileName) }
-                    allVideosList.addAll(subEpisodes)
-                    seriesList.add(
-                        AnimeSeries(
-                            folderUri = file.uri.toString(),
-                            name = file.name ?: "Unknown Series",
-                            episodeCount = subEpisodes.size,
-                            firstEpisodeUri = subEpisodes.firstOrNull()?.uri
-                        )
-                    )
-                }
-            } else if (file.isFile && file.name?.let { FileUtils.isSupportedVideoFile(it) } == true) {
-                val uriStr = file.uri.toString()
-                if (PlaylistHolder.deletedUris.contains(uriStr)) return@forEach
-                val fileName = file.name ?: "Video"
-                val progress = progressMap[uriStr]
-                val effectiveDuration = progress?.durationMs ?: 0L
-                val isShort = effectiveDuration in 1 until 60_000L
-                allVideosList.add(
-                    Episode(
-                        uri = uriStr,
-                        title = FileUtils.getBaseName(fileName),
-                        fileName = fileName,
-                        seriesFolderUri = rootDoc.uri.toString(),
-                        durationMs = effectiveDuration,
-                        lastPositionMs = if (isShort) 0L else (progress?.lastPositionMs ?: 0L),
-                        progressPercentage = if (isShort) 0 else (progress?.progressPercentage ?: 0),
-                        fileSize = file.length()
-                    )
-                )
-            }
-        }
-
-        allVideosList.sortWith { e1, e2 -> naturalOrderComparator.compare(e1.fileName, e2.fileName) }
-        val sortedSeries = seriesList.sortedWith { s1, s2 -> naturalOrderComparator.compare(s1.name, s2.name) }
-
-        MediaScanResult(allVideos = allVideosList, folders = sortedSeries)
     }
 
     suspend fun refreshProgress(episodes: List<Episode>): List<Episode> = withContext(Dispatchers.IO) {
@@ -277,7 +200,7 @@ class MediaRepository(private val context: Context) {
 
             Episode(
                 uri = uriStr,
-                title = FileUtils.getBaseName(fileName),
+                title = FileUtils.getDisplayTitle(fileName),
                 fileName = fileName,
                 seriesFolderUri = seriesFolderUri.toString(),
                 durationMs = dur,
@@ -292,13 +215,19 @@ class MediaRepository(private val context: Context) {
 
     private suspend fun getMediaStoreEpisodes(bucketId: String): List<Episode> {
         val list = mutableListOf<Episode>()
-        val projection = arrayOf(
-            MediaStore.Video.Media._ID,
-            MediaStore.Video.Media.DISPLAY_NAME,
-            MediaStore.Video.Media.DURATION,
-            MediaStore.Video.Media.SIZE,
-            MediaStore.Video.Media.DATE_ADDED
-        )
+        val projection = buildList {
+            add(MediaStore.Video.Media._ID)
+            add(MediaStore.Video.Media.DISPLAY_NAME)
+            add(MediaStore.Video.Media.DURATION)
+            add(MediaStore.Video.Media.SIZE)
+            add(MediaStore.Video.Media.DATE_ADDED)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                add(MediaStore.MediaColumns.IS_PENDING)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                add(MediaStore.MediaColumns.IS_TRASHED)
+            }
+        }.toTypedArray()
 
         val selection = if (bucketId == "all") null else "${MediaStore.Video.Media.BUCKET_ID} = ?"
         val selectionArgs = if (bucketId == "all") null else arrayOf(bucketId)
@@ -348,7 +277,7 @@ class MediaRepository(private val context: Context) {
                         list.add(
                             Episode(
                                 uri = contentUri,
-                                title = FileUtils.getBaseName(fileName),
+                                title = FileUtils.getDisplayTitle(fileName),
                                 fileName = fileName,
                                 seriesFolderUri = "mediastore://folder/$bucketId",
                                 durationMs = dur,
@@ -537,13 +466,13 @@ class MediaRepository(private val context: Context) {
         }
 
         val dateStr = if (dateAdded > 0) {
-            SimpleDateFormat("dd MMM yyyy, HH:mm", Locale("id", "ID")).format(Date(dateAdded))
+            SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.forLanguageTag("id-ID")).format(Date(dateAdded))
         } else {
             "Tidak diketahui"
         }
 
         val sizeExact = if (episode.fileSize > 0) {
-            "${FileUtils.formatFileSize(episode.fileSize)} (${String.format(Locale.getDefault(), "%,d", episode.fileSize)} B)"
+            FileUtils.formatFileSize(episode.fileSize)
         } else {
             "0 B"
         }
@@ -551,8 +480,8 @@ class MediaRepository(private val context: Context) {
         var detectedHdr = "SDR"
         var colorDetails = "BT.709 (8-bit)"
 
+        val extractor = MediaExtractor()
         try {
-            val extractor = MediaExtractor()
             if (uri.scheme == "content") {
                 context.contentResolver.openFileDescriptor(uri, "r")?.use { pfd ->
                     extractor.setDataSource(pfd.fileDescriptor)
@@ -596,7 +525,6 @@ class MediaRepository(private val context: Context) {
                     break
                 }
             }
-            extractor.release()
         } catch (e: Exception) {
             if (episode.fileName.contains("HDR10PLUS", ignoreCase = true) || episode.fileName.contains("HDR10+", ignoreCase = true)) {
                 detectedHdr = "HDR10+"
@@ -605,6 +533,10 @@ class MediaRepository(private val context: Context) {
                 detectedHdr = "HDR10"
                 colorDetails = "BT.2020 10-bit"
             }
+        } finally {
+            try {
+                extractor.release()
+            } catch (_: Exception) {}
         }
 
         VideoDetailInfo(

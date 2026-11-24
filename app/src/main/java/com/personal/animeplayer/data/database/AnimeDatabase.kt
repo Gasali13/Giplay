@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [PlaybackProgressEntity::class],
     version = 2,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class AnimeDatabase : RoomDatabase() {
     abstract fun playbackProgressDao(): PlaybackProgressDao
@@ -23,7 +23,7 @@ abstract class AnimeDatabase : RoomDatabase() {
                     context.applicationContext,
                     AnimeDatabase::class.java,
                     "aniplay_database.db"
-                ).fallbackToDestructiveMigration().build()
+                ).addMigrations(*DatabaseMigrations.ALL_MIGRATIONS).build()
                 INSTANCE = instance
                 instance
             }

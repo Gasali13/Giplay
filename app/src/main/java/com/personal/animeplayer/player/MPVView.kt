@@ -11,7 +11,6 @@ class MPVView @JvmOverloads constructor(
 ) : BaseMPVView(context, attrs) {
 
     var onInitOptions: (() -> Unit)? = null
-    var onPostInitOptions: (() -> Unit)? = null
     var onObserveProperties: (() -> Unit)? = null
     var onSurfaceDestroyedListener: (() -> Unit)? = null
 
@@ -19,9 +18,7 @@ class MPVView @JvmOverloads constructor(
         onInitOptions?.invoke()
     }
 
-    override fun postInitOptions() {
-        onPostInitOptions?.invoke()
-    }
+    override fun postInitOptions() {}
 
     override fun observeProperties() {
         onObserveProperties?.invoke()

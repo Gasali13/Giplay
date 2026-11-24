@@ -1,5 +1,6 @@
 package com.personal.animeplayer.player
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -7,77 +8,56 @@ import org.junit.Test
 class ScreenLockTest {
 
     @Test
-    fun testLockedStateBlocksBackExit() {
-        var isScreenLocked = true
-        var finishCalled = false
-        var feedbackShown = false
-        var unlockButtonRevealed = false
+    fun testDefaultUnlockedStateAllowsControlsAndBackExit() {
+        val controller = ScreenLockController()
 
-        fun handleBack() {
-            if (isScreenLocked) {
-                unlockButtonRevealed = true
-                feedbackShown = true
-                return
-            }
-            finishCalled = true
-        }
+        assertFalse(controller.isLocked)
+        assertTrue(controller.canShowControls())
+        assertEquals(LockAction.ALLOW, controller.onBackPressed())
+        assertEquals(LockAction.ALLOW, controller.onSingleTap())
+        assertEquals(LockAction.ALLOW, controller.onToggleControls())
+        assertFalse(controller.shouldConsumeBackKeyEvent())
+    }
 
-        // Back pressed while screen is locked
-        handleBack()
-        assertFalse("Activity must NOT finish when back pressed while locked", finishCalled)
-        assertTrue("Unlock button should be revealed", unlockButtonRevealed)
-        assertTrue("Feedback toast should be shown", feedbackShown)
+    @Test
+    fun testLockedStateBlocksBackExitAndUnlocksCleanly() {
+        val controller = ScreenLockController()
+        controller.lock()
 
-        // Unlock screen
-        isScreenLocked = false
+        assertTrue(controller.isLocked)
+        assertEquals(LockAction.REVEAL_UNLOCK_ONLY, controller.onBackPressed())
+        assertTrue(controller.shouldConsumeBackKeyEvent())
 
-        // Back pressed when unlocked
-        handleBack()
-        assertTrue("Activity should finish when back pressed while unlocked", finishCalled)
+        controller.unlock()
+
+        assertFalse(controller.isLocked)
+        assertEquals(LockAction.ALLOW, controller.onBackPressed())
+        assertFalse(controller.shouldConsumeBackKeyEvent())
     }
 
     @Test
     fun testLockedStateSuppressesControlsVisibility() {
-        var isScreenLocked = true
-        var isControlsVisible = false
+        val controller = ScreenLockController()
+        controller.lock()
 
-        fun showControls() {
-            if (isScreenLocked) return
-            isControlsVisible = true
-        }
+        assertFalse("Controls must NOT become visible when screen is locked", controller.canShowControls())
 
-        // Attempt to show controls while locked
-        showControls()
-        assertFalse("Controls must NOT become visible when screen is locked", isControlsVisible)
+        controller.unlock()
 
-        // Unlock and attempt to show controls
-        isScreenLocked = false
-        showControls()
-        assertTrue("Controls should become visible when unlocked", isControlsVisible)
+        assertTrue("Controls should become visible when unlocked", controller.canShowControls())
     }
 
     @Test
-    fun testLockedSingleTapWakesUnlockButtonInsteadOfControls() {
-        var isScreenLocked = true
-        var controlsToggled = false
-        var unlockButtonRevealed = false
+    fun testLockedSingleTapAndToggleWakeUnlockButtonInsteadOfControls() {
+        val controller = ScreenLockController()
+        controller.lock()
 
-        fun onSingleTap() {
-            if (isScreenLocked) {
-                unlockButtonRevealed = true
-                return
-            }
-            controlsToggled = true
-        }
+        assertEquals(LockAction.REVEAL_UNLOCK_ONLY, controller.onSingleTap())
+        assertEquals(LockAction.REVEAL_UNLOCK_ONLY, controller.onToggleControls())
 
-        // Tap while locked
-        onSingleTap()
-        assertTrue("Single tap while locked must wake unlock button", unlockButtonRevealed)
-        assertFalse("Single tap while locked must NOT toggle full controls", controlsToggled)
+        controller.unlock()
 
-        // Tap while unlocked
-        isScreenLocked = false
-        onSingleTap()
-        assertTrue("Single tap while unlocked should toggle controls", controlsToggled)
+        assertEquals(LockAction.ALLOW, controller.onSingleTap())
+        assertEquals(LockAction.ALLOW, controller.onToggleControls())
     }
 }

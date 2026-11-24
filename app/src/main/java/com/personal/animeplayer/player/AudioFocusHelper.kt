@@ -170,6 +170,11 @@ class AudioFocusHelper(
         mainHandler?.removeCallbacks(abandonRunnable)
     }
 
+    fun release() {
+        mainHandler?.removeCallbacksAndMessages(null)
+        executeAbandonFocus()
+    }
+
     private fun executeAbandonFocus() {
         if (!hasAudioFocus) return
         hasAudioFocus = false

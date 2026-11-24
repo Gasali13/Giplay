@@ -1,0 +1,70 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "f2376b2c1f6b6c6f8d082a1d099edfcf",
+    "entities": [
+      {
+        "tableName": "playback_progress",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`videoUri` TEXT NOT NULL, `title` TEXT NOT NULL, `seriesFolderUri` TEXT, `lastPositionMs` INTEGER NOT NULL, `durationMs` INTEGER NOT NULL, `lastWatchedTimestamp` INTEGER NOT NULL, `isCompleted` INTEGER NOT NULL, PRIMARY KEY(`videoUri`))",
+        "fields": [
+          {
+            "fieldPath": "videoUri",
+            "columnName": "videoUri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "seriesFolderUri",
+            "columnName": "seriesFolderUri",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "lastPositionMs",
+            "columnName": "lastPositionMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "durationMs",
+            "columnName": "durationMs",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastWatchedTimestamp",
+            "columnName": "lastWatchedTimestamp",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isCompleted",
+            "columnName": "isCompleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "videoUri"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f2376b2c1f6b6c6f8d082a1d099edfcf')"
+    ]
+  }
+}

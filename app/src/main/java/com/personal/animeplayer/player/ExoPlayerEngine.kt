@@ -17,7 +17,9 @@ import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import androidx.media3.ui.SubtitleView
 import com.personal.animeplayer.data.model.AudioTrackInfo
 import com.personal.animeplayer.data.model.SubtitleTrackInfo
 
@@ -48,12 +50,14 @@ class ExoPlayerEngine(
     )
 
     private var isPlayerReady = false
-    private var pendingStartPositionMs: Long = 0L
     private var isLooping = false
     private var currentSpeed: Float = 1.0f
+    @Volatile
+    private var isReleased = false
 
     private val progressRunnable = object : Runnable {
         override fun run() {
+            if (isReleased) return
             exoPlayer?.let { p ->
                 if (p.isPlaying) {
                     val pos = p.currentPosition
@@ -77,6 +81,7 @@ class ExoPlayerEngine(
 
             addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    if (isReleased) return
                     onPlaybackStateChanged(isPlaying)
                     if (isPlaying) {
                         audioFocusHelper.requestFocus()
@@ -88,16 +93,13 @@ class ExoPlayerEngine(
                 }
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (isReleased) return
                     when (playbackState) {
                         Player.STATE_READY -> {
                             if (!isPlayerReady) {
                                 isPlayerReady = true
                                 val dur = duration.takeIf { it > 0 } ?: 0L
                                 onVideoReady(dur)
-                                if (pendingStartPositionMs > 0) {
-                                    seekTo(pendingStartPositionMs)
-                                    pendingStartPositionMs = 0L
-                                }
                             }
                             inspectHdrFormat()
                         }
@@ -110,10 +112,12 @@ class ExoPlayerEngine(
                 }
 
                 override fun onTracksChanged(tracks: Tracks) {
+                    if (isReleased) return
                     inspectHdrFormat()
                 }
 
                 override fun onPlayerError(error: PlaybackException) {
+                    if (isReleased) return
                     Log.e("ExoPlayerEngine", "ExoPlayer Error: ${error.message}", error)
                     onPlayerError(error.localizedMessage ?: "Kesalahan pemutaran video ExoPlayer")
                 }
@@ -129,17 +133,18 @@ class ExoPlayerEngine(
     private fun inspectHdrFormat() {
         val player = exoPlayer ?: return
         val format = player.videoFormat
-        val titleLower = currentTitle.lowercase()
-        val isExplicitHdr10Plus = titleLower.contains("hdr10plus") || titleLower.contains("hdr10+")
-        val isExplicitDolby = titleLower.contains("dolby") || titleLower.contains("dv") || titleLower.contains("dovi")
+        val isExplicitHdr10Plus = REGEX_HDR10_PLUS.containsMatchIn(currentTitle)
+        val isExplicitDolby = REGEX_DOLBY_VISION.containsMatchIn(currentTitle)
 
         if (format != null) {
             val colorInfo = format.colorInfo
             val transfer = colorInfo?.colorTransfer ?: -1
             val space = colorInfo?.colorSpace ?: -1
             val hdrStaticInfo = colorInfo?.hdrStaticInfo
+            val isDolbyCodec = format.sampleMimeType == MimeTypes.VIDEO_DOLBY_VISION
 
-            val isHdr = ColorInfo.isTransferHdr(colorInfo) ||
+            val isHdr = isDolbyCodec ||
+                    ColorInfo.isTransferHdr(colorInfo) ||
                     transfer == C.COLOR_TRANSFER_ST2084 ||
                     transfer == C.COLOR_TRANSFER_HLG ||
                     space == C.COLOR_SPACE_BT2020 ||
@@ -148,24 +153,24 @@ class ExoPlayerEngine(
                     isExplicitDolby
 
             val type = when {
-                isExplicitDolby -> "Dolby Vision"
+                isDolbyCodec || isExplicitDolby -> "Dolby Vision"
                 isExplicitHdr10Plus -> "HDR10+"
-                transfer == C.COLOR_TRANSFER_ST2084 -> "HDR10+"
+                transfer == C.COLOR_TRANSFER_ST2084 -> "HDR10"
                 transfer == C.COLOR_TRANSFER_HLG -> "HLG"
-                titleLower.contains("hdr10") -> "HDR10"
+                REGEX_HDR10.containsMatchIn(currentTitle) -> "HDR10"
                 isHdr -> "HDR"
                 else -> "SDR"
             }
             mainHandler.post {
-                onHdrStateDetected(isHdr, type)
+                if (!isReleased) onHdrStateDetected(isHdr, type)
             }
         } else if (isExplicitHdr10Plus || isExplicitDolby) {
             mainHandler.post {
-                onHdrStateDetected(true, if (isExplicitDolby) "Dolby Vision" else "HDR10+")
+                if (!isReleased) onHdrStateDetected(true, if (isExplicitDolby) "Dolby Vision" else "HDR10+")
             }
         } else {
             mainHandler.post {
-                onHdrStateDetected(false, "SDR")
+                if (!isReleased) onHdrStateDetected(false, "SDR")
             }
         }
     }
@@ -178,26 +183,25 @@ class ExoPlayerEngine(
     ) {
         currentTitle = title
         isPlayerReady = false
-        pendingStartPositionMs = startPositionMs
 
-        val titleLower = title.lowercase()
-        val isExplicitHdr10Plus = titleLower.contains("hdr10plus") || titleLower.contains("hdr10+")
-        val isExplicitDolby = titleLower.contains("dolby") || titleLower.contains("dv") || titleLower.contains("dovi")
-        val isExplicitHdr = titleLower.contains("hdr") || titleLower.contains("hdr10") || isExplicitHdr10Plus || isExplicitDolby
+        val isExplicitHdr10Plus = REGEX_HDR10_PLUS.containsMatchIn(title)
+        val isExplicitDolby = REGEX_DOLBY_VISION.containsMatchIn(title)
+        val isExplicitHdr10 = REGEX_HDR10.containsMatchIn(title)
+        val isExplicitHdr = isExplicitHdr10Plus || isExplicitDolby || isExplicitHdr10 || REGEX_HDR.containsMatchIn(title)
 
         if (isExplicitHdr) {
             val type = when {
                 isExplicitDolby -> "Dolby Vision"
                 isExplicitHdr10Plus -> "HDR10+"
-                titleLower.contains("hdr10") -> "HDR10"
+                isExplicitHdr10 -> "HDR10"
                 else -> "HDR"
             }
             mainHandler.post {
-                onHdrStateDetected(true, type)
+                if (!isReleased) onHdrStateDetected(true, type)
             }
         } else {
             mainHandler.post {
-                onHdrStateDetected(false, "SDR")
+                if (!isReleased) onHdrStateDetected(false, "SDR")
             }
         }
 
@@ -225,7 +229,12 @@ class ExoPlayerEngine(
             .build()
 
         exoPlayer?.let { player ->
-            player.setMediaItem(mediaItem)
+            val safeStartPos = startPositionMs.coerceAtLeast(0L)
+            if (safeStartPos > 0L) {
+                player.setMediaItem(mediaItem, safeStartPos)
+            } else {
+                player.setMediaItem(mediaItem)
+            }
             player.prepare()
             player.play()
         }
@@ -254,18 +263,58 @@ class ExoPlayerEngine(
         }
     }
 
-    fun seekTo(positionMs: Long, fast: Boolean = false) {
+    fun seekTo(positionMs: Long) {
         exoPlayer?.seekTo(positionMs.coerceAtLeast(0L))
     }
 
     fun setPlaybackSpeed(speed: Float) {
-        currentSpeed = speed
-        exoPlayer?.playbackParameters = PlaybackParameters(speed)
+        val safeSpeed = speed.coerceIn(0.25f, 4.0f)
+        currentSpeed = safeSpeed
+        exoPlayer?.playbackParameters = PlaybackParameters(safeSpeed)
     }
 
     fun setLooping(loop: Boolean) {
         isLooping = loop
         exoPlayer?.repeatMode = if (loop) Player.REPEAT_MODE_ONE else Player.REPEAT_MODE_OFF
+    }
+
+    fun setSongDetectionMode(enabled: Boolean) {
+        audioFocusHelper.songDetectionMode = enabled
+    }
+
+    fun setAspectRatio(mode: AspectRatioMode) {
+        val contentFrame = playerView.findViewById<AspectRatioFrameLayout>(
+            androidx.media3.ui.R.id.exo_content_frame
+        )
+        val videoSize = exoPlayer?.videoSize
+        val naturalAspect = if (videoSize != null && videoSize.width > 0 && videoSize.height > 0) {
+            (videoSize.width * videoSize.pixelWidthHeightRatio) / videoSize.height.toFloat()
+        } else {
+            0f
+        }
+
+        when (mode) {
+            AspectRatioMode.FIT -> {
+                if (naturalAspect > 0f) contentFrame?.setAspectRatio(naturalAspect)
+                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            }
+            AspectRatioMode.STRETCH -> {
+                if (naturalAspect > 0f) contentFrame?.setAspectRatio(naturalAspect)
+                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+            }
+            AspectRatioMode.ZOOM -> {
+                if (naturalAspect > 0f) contentFrame?.setAspectRatio(naturalAspect)
+                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+            }
+            AspectRatioMode.SIXTEEN_NINE -> {
+                contentFrame?.setAspectRatio(16f / 9f)
+                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            }
+            AspectRatioMode.FOUR_THREE -> {
+                contentFrame?.setAspectRatio(4f / 3f)
+                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            }
+        }
     }
 
     fun loadExternalSubtitle(uri: Uri, select: Boolean = true) {
@@ -294,6 +343,11 @@ class ExoPlayerEngine(
         if (isCurrentlyPlaying) player.play()
     }
 
+    fun setSubtitleScale(scalePercent: Int) {
+        val scale = (scalePercent / 100f).coerceIn(0.5f, 3.0f)
+        playerView.subtitleView?.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * scale)
+    }
+
     fun getSubtitleTracks(): List<SubtitleTrackInfo> {
         val tracks = mutableListOf<SubtitleTrackInfo>()
         val player = exoPlayer ?: return tracks
@@ -306,11 +360,9 @@ class ExoPlayerEngine(
                     val isSelected = group.isTrackSelected(i)
                     tracks.add(
                         SubtitleTrackInfo(
-                            id = index.toString(),
                             label = format.label ?: format.language ?: "Subtitle #${index + 1}",
                             language = format.language ?: "und",
-                            trackGroupIndex = index,
-                            trackIndex = i,
+                            trackIndex = index,
                             isSelected = isSelected
                         )
                     )
@@ -368,13 +420,10 @@ class ExoPlayerEngine(
                     val title = format.label ?: format.language ?: "Audio Track ${index + 1}"
                     list.add(
                         AudioTrackInfo(
-                            id = index.toString(),
                             label = title,
                             language = format.language ?: "und",
                             channels = format.channelCount,
-                            sampleRate = format.sampleRate,
-                            trackGroupIndex = index,
-                            trackIndex = i,
+                            trackIndex = index,
                             isSelected = isSelected
                         )
                     )
@@ -417,13 +466,37 @@ class ExoPlayerEngine(
     val isPlaying: Boolean
         get() = exoPlayer?.isPlaying == true
 
+    fun getVideoSize(): Pair<Int, Int>? {
+        val size = exoPlayer?.videoSize ?: return null
+        val w = size.width
+        val h = size.height
+        if (w <= 0 || h <= 0) return null
+        val adjustedW = if (size.pixelWidthHeightRatio > 0f && size.pixelWidthHeightRatio != 1f) {
+            (w * size.pixelWidthHeightRatio).toInt().coerceAtLeast(1)
+        } else {
+            w
+        }
+        return adjustedW to h
+    }
+
     fun release() {
+        isReleased = true
         try {
             stop()
+            mainHandler.removeCallbacksAndMessages(null)
+            audioFocusHelper.release()
+            playerView.player = null
             exoPlayer?.release()
             exoPlayer = null
         } catch (e: Exception) {
             Log.e("ExoPlayerEngine", "Error releasing ExoPlayer: ${e.message}")
         }
+    }
+
+    companion object {
+        internal val REGEX_HDR10_PLUS = Regex("""(?i)(?:^|[^a-z0-9])(hdr10\+|hdr10plus)(?:$|[^a-z0-9])""")
+        internal val REGEX_DOLBY_VISION = Regex("""(?i)(?:^|[^a-z0-9])(dolby[\s._-]*vision|dovi|dv)(?:$|[^a-z0-9])""")
+        internal val REGEX_HDR10 = Regex("""(?i)(?:^|[^a-z0-9])hdr10(?:$|[^a-z0-9])""")
+        internal val REGEX_HDR = Regex("""(?i)(?:^|[^a-z0-9])hdr(?:$|[^a-z0-9])""")
     }
 }

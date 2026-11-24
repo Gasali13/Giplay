@@ -1,13 +1,16 @@
 package com.personal.animeplayer.data.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class AnimeSeries(
     val folderUri: String,
     val name: String,
     val episodeCount: Int = 0,
-    val firstEpisodeUri: String? = null,
     val lastModified: Long = 0L
 )
 
+@Immutable
 data class Episode(
     val uri: String,
     val title: String,
@@ -20,24 +23,19 @@ data class Episode(
     val dateAdded: Long = 0L
 )
 
+@Immutable
 data class SubtitleTrackInfo(
-    val id: String,
     val label: String,
     val language: String? = null,
-    val isExternal: Boolean = false,
-    val uri: String? = null,
-    val trackGroupIndex: Int = -1,
     val trackIndex: Int = -1,
     val isSelected: Boolean = false
 )
 
+@Immutable
 data class AudioTrackInfo(
-    val id: String,
     val label: String,
     val language: String? = null,
     val channels: Int = 2,
-    val sampleRate: Int = 48000,
-    val trackGroupIndex: Int = -1,
     val trackIndex: Int = -1,
     val isSelected: Boolean = false
 )
@@ -53,6 +51,7 @@ enum class SortOrder {
     OLDEST
 }
 
+@Immutable
 data class VideoDetailInfo(
     val title: String,
     val fileName: String,

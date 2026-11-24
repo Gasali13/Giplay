@@ -9,11 +9,13 @@ import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import kotlin.math.abs
 
 interface GestureListener {
     fun onSeekGesture(deltaMs: Long, targetMs: Long)
     fun onSeekConfirmed(targetMs: Long)
+    fun onSeekCancelled(originalMs: Long) {}
     fun onBrightnessChanged(percent: Int)
     fun onVolumeChanged(percent: Int)
     fun onDoubleTapSeek(isForward: Boolean)
@@ -56,7 +58,7 @@ class GestureManager(
     private var isSpeedControlActive = false
 
     private val LONG_PRESS_DELAY = 350L
-    private val MOVE_THRESHOLD = 24f
+    private val moveThreshold = ViewConfiguration.get(activity).scaledTouchSlop.toFloat().coerceAtLeast(16f)
 
     private val longPressRunnable = Runnable {
         if (!isSeeking && !isAdjustingBrightness && !isAdjustingVolume && !isLocked) {
@@ -70,6 +72,7 @@ class GestureManager(
     private val gestureDetector = GestureDetector(activity, object : GestureDetector.SimpleOnGestureListener() {
         override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
             if (!isSpeedControlActive) {
+                overlayView.performClick()
                 listener.onSingleTap()
             }
             return true
@@ -90,6 +93,12 @@ class GestureManager(
         setupTouchListener()
     }
 
+    fun release() {
+        mainHandler.removeCallbacksAndMessages(null)
+        overlayView.setOnTouchListener(null)
+    }
+
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
     private fun setupTouchListener() {
         overlayView.setOnTouchListener { _, event ->
             if (isLocked) {
@@ -143,15 +152,15 @@ class GestureManager(
                     val totalDeltaY = downY - event.y // positive = upward swipe
 
                     // Cancel long press if finger moved significantly
-                    if (abs(totalDeltaX) > MOVE_THRESHOLD || abs(totalDeltaY) > MOVE_THRESHOLD) {
+                    if (abs(totalDeltaX) > moveThreshold || abs(totalDeltaY) > moveThreshold) {
                         mainHandler.removeCallbacks(longPressRunnable)
                     }
 
                     // Determine gesture intent
                     if (!isSeeking && !isAdjustingBrightness && !isAdjustingVolume) {
-                        if (abs(totalDeltaX) > MOVE_THRESHOLD && abs(totalDeltaX) > abs(totalDeltaY)) {
+                        if (abs(totalDeltaX) > moveThreshold && abs(totalDeltaX) > abs(totalDeltaY)) {
                             isSeeking = true
-                        } else if (abs(totalDeltaY) > MOVE_THRESHOLD && abs(totalDeltaY) > abs(totalDeltaX)) {
+                        } else if (abs(totalDeltaY) > moveThreshold && abs(totalDeltaY) > abs(totalDeltaX)) {
                             if (downX < screenWidth / 2f) {
                                 isAdjustingBrightness = true
                             } else {
@@ -187,7 +196,7 @@ class GestureManager(
                     true
                 }
 
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP -> {
                     mainHandler.removeCallbacks(longPressRunnable)
 
                     if (isSpeedControlActive) {
@@ -208,6 +217,24 @@ class GestureManager(
                         if (currentBrightness in 0.01f..1.0f) {
                             listener.onBrightnessConfirmed(currentBrightness)
                         }
+                    }
+                    isSeeking = false
+                    isAdjustingBrightness = false
+                    isAdjustingVolume = false
+
+                    gestureDetector.onTouchEvent(event)
+                    true
+                }
+
+                MotionEvent.ACTION_CANCEL -> {
+                    mainHandler.removeCallbacks(longPressRunnable)
+
+                    if (isSpeedControlActive) {
+                        isSpeedControlActive = false
+                        listener.onSpeedPressEnd()
+                    }
+                    if (isSeeking) {
+                        listener.onSeekCancelled(initialSeekPosition)
                     }
                     isSeeking = false
                     isAdjustingBrightness = false

@@ -1,13 +1,16 @@
 package com.personal.animeplayer.player
 
 import android.content.Context
+import android.graphics.PixelFormat
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.os.ParcelFileDescriptor
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.util.Log
 import com.personal.animeplayer.data.model.AudioTrackInfo
 import com.personal.animeplayer.data.model.SubtitleTrackInfo
-import `is`.xyz.mpv.BaseMPVView
 import `is`.xyz.mpv.MPV
 import `is`.xyz.mpv.MPVNode
 import java.io.File
@@ -45,11 +48,60 @@ class PlayerEngine(
 
     private var currentDurationMs: Long = 0L
     private var isMpvInitialized = false
+    @Volatile
+    private var isReleased = false
     private var pendingStartPositionMs: Long = 0L
+    private var pendingExternalSubtitles: List<Uri> = emptyList()
     private var currentMediaTitle: String = ""
 
-    private var currentHdrType: String = "SDR"
-    private var isCurrentVideoHdr: Boolean = false
+    private val pfdLock = Any()
+    private val activePfds = mutableListOf<ParcelFileDescriptor>()
+    private val retiringPfds = mutableListOf<ParcelFileDescriptor>()
+
+    private fun rotateActivePfdsForNewMedia() {
+        val staleToClose: List<ParcelFileDescriptor>
+        synchronized(pfdLock) {
+            staleToClose = retiringPfds.toList()
+            retiringPfds.clear()
+            retiringPfds.addAll(activePfds)
+            activePfds.clear()
+        }
+        staleToClose.forEach { pfd ->
+            try {
+                pfd.close()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun closeRetiringPfds() {
+        val toClose: List<ParcelFileDescriptor>
+        synchronized(pfdLock) {
+            toClose = retiringPfds.toList()
+            retiringPfds.clear()
+        }
+        toClose.forEach { pfd ->
+            try {
+                pfd.close()
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun closeAllPfds() {
+        val toClose: List<ParcelFileDescriptor>
+        synchronized(pfdLock) {
+            toClose = retiringPfds + activePfds
+            retiringPfds.clear()
+            activePfds.clear()
+        }
+        toClose.forEach { pfd ->
+            try {
+                pfd.close()
+            } catch (_: Exception) {
+            }
+        }
+    }
 
     init {
         initMpv()
@@ -57,14 +109,15 @@ class PlayerEngine(
 
     private fun initMpv() {
         try {
-            // Unpack bundled MPV assets (subfont.ttf and cacert.pem)
-            `is`.xyz.mpv.Utils.copyAssets(context)
-
             val configDir = context.filesDir
             val cacheDir = File(context.cacheDir, "mpv").apply { mkdirs() }
             val fontsDir = File(configDir, "fonts").apply { mkdirs() }
 
-            setupFonts(configDir, fontsDir)
+            if (!File(configDir, "subfont.ttf").exists() || !File(fontsDir, "default.ttf").exists()) {
+                // Unpack bundled MPV assets (subfont.ttf and cacert.pem) only when missing
+                `is`.xyz.mpv.Utils.copyAssets(context)
+                setupFonts(configDir, fontsDir)
+            }
 
             mpvView.onInitOptions = {
                 // Configure optimal settings for Video, Anime & HDR10+
@@ -92,6 +145,9 @@ class PlayerEngine(
                 mpv.setOptionString("embeddedfonts", "yes")
                 mpv.setOptionString("sub-fonts-dir", fontsDir.absolutePath)
                 mpv.setOptionString("sub-font", "subfont")
+
+                // Matroska Ordered Chapters & Segment Linking
+                mpv.setOptionString("ordered-chapters", "yes")
             }
 
             mpvView.onSurfaceDestroyedListener = {
@@ -116,12 +172,22 @@ class PlayerEngine(
                 // Observe video parameters for dynamic HDR detection
                 mpv.observeProperty("video-params/gamma", MPV.mpvFormat.MPV_FORMAT_STRING)
                 mpv.observeProperty("video-params/primaries", MPV.mpvFormat.MPV_FORMAT_STRING)
-                mpv.observeProperty("video-params/colormatrix", MPV.mpvFormat.MPV_FORMAT_STRING)
                 mpv.observeProperty("video-params/pixelformat", MPV.mpvFormat.MPV_FORMAT_STRING)
             }
 
             mpvView.initialize(configDir.absolutePath, cacheDir.absolutePath)
             isMpvInitialized = true
+            if (mpvView.holder.surface?.isValid == true) {
+                mpvView.surfaceCreated(mpvView.holder)
+                if (mpvView.width > 0 && mpvView.height > 0) {
+                    mpvView.surfaceChanged(
+                        mpvView.holder,
+                        PixelFormat.RGBA_8888,
+                        mpvView.width,
+                        mpvView.height
+                    )
+                }
+            }
         } catch (e: Exception) {
             Log.e("PlayerEngine", "Failed to initialize MPV: ${e.message}", e)
             onPlayerError("Gagal menginisialisasi engine MPV: ${e.localizedMessage}")
@@ -171,30 +237,29 @@ class PlayerEngine(
         }
     }
 
-    override fun eventProperty(property: String) {
-        if (property == "track-list") {
-            // Tracks changed or loaded
-        }
-    }
+    override fun eventProperty(property: String) {}
 
     override fun eventProperty(property: String, value: Boolean) {
+        if (isReleased) return
         if (property == "pause") {
             isPlaying = !value
             mainHandler.post {
-                onPlaybackStateChanged(!value)
+                if (!isReleased) onPlaybackStateChanged(!value)
             }
         } else if (property == "eof-reached" && value) {
             if (isLoopingEnabled && !isStopped) {
                 mainHandler.post {
-                    if (!isStopped) {
+                    if (!isReleased && !isStopped) {
                         seekTo(0L)
                         play()
                     }
                 }
             } else {
                 mainHandler.post {
-                    audioFocusHelper.abandonFocus(delayedMs = 0L)
-                    onPlaybackEnded()
+                    if (!isReleased) {
+                        audioFocusHelper.abandonFocus(delayedMs = 0L)
+                        onPlaybackEnded()
+                    }
                 }
             }
         }
@@ -203,11 +268,12 @@ class PlayerEngine(
     override fun eventProperty(property: String, value: Long) {}
 
     override fun eventProperty(property: String, value: Double) {
+        if (isReleased) return
         when (property) {
             "time-pos" -> {
                 val posMs = (value * 1000).toLong()
                 mainHandler.post {
-                    onPositionChanged(posMs, currentDurationMs)
+                    if (!isReleased) onPositionChanged(posMs, currentDurationMs)
                 }
             }
             "duration" -> {
@@ -215,7 +281,7 @@ class PlayerEngine(
                 if (durMs > 0) {
                     currentDurationMs = durMs
                     mainHandler.post {
-                        onVideoReady(durMs)
+                        if (!isReleased) onVideoReady(durMs)
                     }
                 }
             }
@@ -223,6 +289,7 @@ class PlayerEngine(
     }
 
     override fun eventProperty(property: String, value: String) {
+        if (isReleased) return
         when (property) {
             "video-params/gamma", "video-params/primaries", "video-params/pixelformat" -> {
                 checkHdrState()
@@ -233,8 +300,11 @@ class PlayerEngine(
     override fun eventProperty(property: String, value: MPVNode) {}
 
     override fun event(eventId: Int, node: MPVNode) {
+        if (isReleased) return
         if (eventId == MPV.mpvEvent.MPV_EVENT_FILE_LOADED) {
+            closeRetiringPfds()
             mainHandler.post {
+                if (isReleased) return@post
                 checkHdrState()
                 mpv.setPropertyString("loop-file", if (isLoopingEnabled) "inf" else "no")
                 val durSec = mpv.getPropertyDouble("duration") ?: 0.0
@@ -246,11 +316,19 @@ class PlayerEngine(
                     seekTo(pendingStartPositionMs)
                     pendingStartPositionMs = 0L
                 }
+                if (pendingExternalSubtitles.isNotEmpty()) {
+                    val subsToLoad = pendingExternalSubtitles
+                    pendingExternalSubtitles = emptyList()
+                    subsToLoad.forEach { subUri ->
+                        loadExternalSubtitle(subUri, select = false)
+                    }
+                }
             }
         }
     }
 
     fun checkHdrState() {
+        if (isReleased) return
         val gamma = mpv.getPropertyString("video-params/gamma") ?: ""
         val primaries = mpv.getPropertyString("video-params/primaries") ?: ""
         val pixelFormat = mpv.getPropertyString("video-params/pixelformat") ?: ""
@@ -260,31 +338,28 @@ class PlayerEngine(
         val is10Bit = pixelFormat.contains("10", ignoreCase = true) || pixelFormat.contains("p010", ignoreCase = true)
         val isBt2020 = primaries.contains("2020", ignoreCase = true)
 
-        val titleLower = currentMediaTitle.lowercase()
-        val isExplicitHdr10Plus = titleLower.contains("hdr10plus") || titleLower.contains("hdr10+")
+        val isExplicitHdr10Plus = REGEX_HDR10_PLUS.containsMatchIn(currentMediaTitle)
+        val isExplicitHdr10 = REGEX_HDR10.containsMatchIn(currentMediaTitle)
+        val isExplicitHdr = REGEX_HDR.containsMatchIn(currentMediaTitle)
 
         val (isHdr, type) = when {
             isExplicitHdr10Plus -> true to "HDR10+"
-            isPq && isBt2020 -> {
-                if (titleLower.contains("hdr10plus") || titleLower.contains("hdr10+")) true to "HDR10+"
-                else true to "HDR10"
-            }
+            isPq && isBt2020 -> true to "HDR10"
             isPq -> true to "HDR10"
             isHlg -> true to "HLG"
             is10Bit && isBt2020 -> true to "HDR"
-            titleLower.contains("hdr10") -> true to "HDR10"
-            titleLower.contains("hdr") -> true to "HDR"
+            isExplicitHdr10 -> true to "HDR10"
+            isExplicitHdr -> true to "HDR"
             else -> false to "SDR"
         }
 
-        isCurrentVideoHdr = isHdr
-        currentHdrType = type
         mainHandler.post {
-            onHdrStateDetected(isHdr, type)
+            if (!isReleased) onHdrStateDetected(isHdr, type)
         }
     }
 
     fun setDecoderMode(mode: String) {
+        if (!isMpvInitialized || isReleased) return
         try {
             mpv.setPropertyString("hwdec", mode)
         } catch (e: Exception) {
@@ -292,8 +367,44 @@ class PlayerEngine(
         }
     }
 
-    fun getDecoderMode(): String {
-        return mpv.getPropertyString("hwdec") ?: "mediacodec"
+    fun setSongDetectionMode(enabled: Boolean) {
+        audioFocusHelper.songDetectionMode = enabled
+    }
+
+    fun setAspectRatio(mode: AspectRatioMode, displayWidthPx: Int, displayHeightPx: Int) {
+        if (!isMpvInitialized || isReleased) return
+        try {
+            when (mode) {
+                AspectRatioMode.FIT -> {
+                    mpv.setPropertyString("video-aspect-override", "-1")
+                    mpv.setPropertyDouble("panscan", 0.0)
+                }
+                AspectRatioMode.STRETCH -> {
+                    if (displayWidthPx > 0 && displayHeightPx > 0) {
+                        val displayAspect = displayWidthPx.toDouble() / displayHeightPx.toDouble()
+                        mpv.setPropertyString(
+                            "video-aspect-override",
+                            String.format(java.util.Locale.US, "%.4f", displayAspect)
+                        )
+                    }
+                    mpv.setPropertyDouble("panscan", 0.0)
+                }
+                AspectRatioMode.ZOOM -> {
+                    mpv.setPropertyString("video-aspect-override", "-1")
+                    mpv.setPropertyDouble("panscan", 1.0)
+                }
+                AspectRatioMode.SIXTEEN_NINE -> {
+                    mpv.setPropertyString("video-aspect-override", "16:9")
+                    mpv.setPropertyDouble("panscan", 0.0)
+                }
+                AspectRatioMode.FOUR_THREE -> {
+                    mpv.setPropertyString("video-aspect-override", "4:3")
+                    mpv.setPropertyDouble("panscan", 0.0)
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("PlayerEngine", "Failed to set MPV aspect ratio: ${e.message}")
+        }
     }
 
     var isPlaying: Boolean = false
@@ -334,12 +445,10 @@ class PlayerEngine(
             mpv.command("stop")
         } catch (e: Exception) {
             Log.w("PlayerEngine", "Failed to stop MPV: ${e.message}")
+        } finally {
+            closeAllPfds()
         }
         audioFocusHelper.abandonFocus(delayedMs = 0L)
-    }
-
-    fun abandonAudioFocus(immediate: Boolean = true) {
-        audioFocusHelper.abandonFocus(delayedMs = if (immediate) 0L else 500L)
     }
 
     fun seekTo(positionMs: Long, fast: Boolean = false) {
@@ -347,14 +456,6 @@ class PlayerEngine(
         val flag = if (fast) "absolute+keyframes" else "absolute"
         mpv.command("seek", seconds.toString(), flag)
     }
-
-    fun seekBy(deltaMs: Long) {
-        val deltaSeconds = deltaMs / 1000.0
-        mpv.command("seek", deltaSeconds.toString(), "relative")
-    }
-
-    val playbackSpeed: Float
-        get() = (mpv.getPropertyDouble("speed") ?: 1.0).toFloat()
 
     fun setPlaybackSpeed(speed: Float) {
         val safeSpeed = speed.coerceIn(0.25f, 4.0f).toDouble()
@@ -377,6 +478,81 @@ class PlayerEngine(
         }
     }
 
+    /**
+     * Resolves the real filesystem path for a media or subtitle URI so MPV can
+     * directly access its directory (essential for Matroska Ordered Chapters / Segment Linking
+     * and external subtitle auto-detection). Falls back to fd:// if direct path is unavailable.
+     */
+    private fun getRealPathFromUri(uri: Uri): String? {
+        if (uri.scheme == "file") return uri.path
+        if (uri.scheme != "content") return null
+
+        // 1. Try querying MediaStore DATA column
+        try {
+            val projection = arrayOf(MediaStore.MediaColumns.DATA)
+            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                val colIdx = cursor.getColumnIndex(MediaStore.MediaColumns.DATA)
+                if (colIdx != -1 && cursor.moveToFirst()) {
+                    val path = cursor.getString(colIdx)
+                    if (!path.isNullOrBlank()) return path
+                }
+            }
+        } catch (e: Exception) {
+            // Ignore and try fallback
+        }
+
+        // 2. Try parsing external storage documents uri (SAF)
+        try {
+            if ("com.android.externalstorage.documents" == uri.authority) {
+                val docId = DocumentsContract.getDocumentId(uri)
+                val parts = docId.split(":")
+                if (parts.size >= 2) {
+                    val type = parts[0]
+                    val relativePath = parts[1]
+                    return if ("primary".equals(type, ignoreCase = true)) {
+                        "/storage/emulated/0/$relativePath"
+                    } else {
+                        "/storage/$type/$relativePath"
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Ignore
+        }
+
+        return null
+    }
+
+    private fun resolveMediaFilePath(uri: Uri): String {
+        val realPath = getRealPathFromUri(uri)
+        if (!realPath.isNullOrBlank()) {
+            val file = File(realPath)
+            if (file.exists() && file.canRead()) {
+                Log.d("PlayerEngine", "Resolved direct file path for MPV: $realPath")
+                return realPath
+            }
+        }
+
+        // Fallback to managed Android ContentResolver FileDescriptor
+        if (uri.scheme == "content") {
+            try {
+                val pfd = context.contentResolver.openFileDescriptor(uri, "r")
+                if (pfd != null) {
+                    synchronized(pfdLock) {
+                        activePfds.add(pfd)
+                    }
+                    val fdPath = "fd://${pfd.fd}"
+                    Log.d("PlayerEngine", "Using managed FileDescriptor fallback for MPV: $fdPath")
+                    return fdPath
+                }
+            } catch (e: Exception) {
+                Log.w("PlayerEngine", "Failed to open file descriptor for $uri: ${e.message}")
+            }
+        }
+
+        return uri.path ?: uri.toString()
+    }
+
     fun playMedia(
         videoUri: Uri,
         title: String,
@@ -385,24 +561,18 @@ class PlayerEngine(
     ) {
         try {
             currentMediaTitle = title
-            isCurrentVideoHdr = false
-            currentHdrType = "SDR"
             mainHandler.post {
-                onHdrStateDetected(false, "SDR")
+                if (!isReleased) onHdrStateDetected(false, "SDR")
             }
 
             audioFocusHelper.cancelPendingAbandon()
             audioFocusHelper.requestFocus()
 
-            val path = if (videoUri.scheme == "content") {
-                context.contentResolver.openFileDescriptor(videoUri, "r")?.use { pfd ->
-                    "fd://${pfd.detachFd()}"
-                } ?: videoUri.toString()
-            } else {
-                videoUri.path ?: videoUri.toString()
-            }
+            rotateActivePfdsForNewMedia()
+            val path = resolveMediaFilePath(videoUri)
 
             pendingStartPositionMs = startPositionMs
+            pendingExternalSubtitles = externalSubtitles
 
             if (mpvView.holder.surface.isValid) {
                 mpv.command("loadfile", path)
@@ -412,10 +582,6 @@ class PlayerEngine(
             mpv.setPropertyString("loop-file", if (isLoopingEnabled) "inf" else "no")
             mpv.setPropertyBoolean("pause", false)
             isPlaying = true
-
-            externalSubtitles.forEach { subUri ->
-                loadExternalSubtitle(subUri, select = false)
-            }
         } catch (e: Exception) {
             Log.e("PlayerEngine", "Error playing media: ${e.message}", e)
             onPlayerError("Tidak dapat memutar video: ${e.localizedMessage}")
@@ -424,13 +590,7 @@ class PlayerEngine(
 
     fun loadExternalSubtitle(subUri: Uri, select: Boolean = false) {
         try {
-            val path = if (subUri.scheme == "content") {
-                context.contentResolver.openFileDescriptor(subUri, "r")?.use { pfd ->
-                    "fd://${pfd.detachFd()}"
-                } ?: subUri.toString()
-            } else {
-                subUri.path ?: subUri.toString()
-            }
+            val path = resolveMediaFilePath(subUri)
             val flag = if (select) "select" else "auto"
             mpv.command("sub-add", path, flag)
         } catch (e: Exception) {
@@ -455,10 +615,8 @@ class PlayerEngine(
                 }
                 list.add(
                     SubtitleTrackInfo(
-                        id = id.toString(),
                         label = label,
                         language = lang,
-                        trackGroupIndex = id,
                         trackIndex = id,
                         isSelected = selected
                     )
@@ -476,16 +634,13 @@ class PlayerEngine(
         }
     }
 
-    fun setSecondarySubtitleTrack(trackId: Int) {
-        if (trackId <= 0) {
-            mpv.setPropertyString("secondary-sid", "no")
-        } else {
-            mpv.setPropertyInt("secondary-sid", trackId)
-        }
-    }
-
     fun setSubtitleDelay(delayMs: Long) {
-        mpv.setPropertyDouble("sub-delay", delayMs / 1000.0)
+        if (!isMpvInitialized || isReleased) return
+        try {
+            mpv.setPropertyDouble("sub-delay", delayMs / 1000.0)
+        } catch (e: Exception) {
+            Log.w("PlayerEngine", "Failed to set subtitle delay: ${e.message}")
+        }
     }
 
     fun setSubtitleScale(scalePercent: Int) {
@@ -499,11 +654,6 @@ class PlayerEngine(
         } catch (e: Exception) {
             Log.w("PlayerEngine", "Failed to set sub scale: ${e.message}")
         }
-    }
-
-    fun setSubtitleFontSize(sizeSp: Float) {
-        // Kept for backward compatibility, routes to scale
-        setSubtitleScale((sizeSp / 18.0f * 100f).toInt())
     }
 
     fun getAudioTracks(): List<AudioTrackInfo> {
@@ -524,12 +674,9 @@ class PlayerEngine(
                 }
                 list.add(
                     AudioTrackInfo(
-                        id = id.toString(),
                         label = label,
                         language = lang,
                         channels = channels,
-                        sampleRate = 48000,
-                        trackGroupIndex = id,
                         trackIndex = id,
                         isSelected = selected
                     )
@@ -543,13 +690,41 @@ class PlayerEngine(
         mpv.setPropertyInt("aid", trackId)
     }
 
+    fun getVideoSize(): Pair<Int, Int>? {
+        if (!isMpvInitialized || isReleased) return null
+        return try {
+            val w = mpv.getPropertyInt("video-out-params/dw")
+                ?: mpv.getPropertyInt("dwidth")
+                ?: mpv.getPropertyInt("width")
+            val h = mpv.getPropertyInt("video-out-params/dh")
+                ?: mpv.getPropertyInt("dheight")
+                ?: mpv.getPropertyInt("height")
+            if (w != null && h != null && w > 0 && h > 0) w to h else null
+        } catch (_: Exception) {
+            null
+        }
+    }
+
     fun release() {
+        isReleased = true
+        isMpvInitialized = false
+        pendingExternalSubtitles = emptyList()
+        mainHandler.removeCallbacksAndMessages(null)
         try {
             stop()
+            audioFocusHelper.release()
             mpv.removeObserver(this)
             mpvView.destroy()
         } catch (e: Exception) {
             Log.e("PlayerEngine", "Error releasing MPV: ${e.message}")
+        } finally {
+            closeAllPfds()
         }
+    }
+
+    companion object {
+        private val REGEX_HDR10_PLUS = Regex("""(?i)(?:^|[^a-z0-9])(hdr10\+|hdr10plus)(?:$|[^a-z0-9])""")
+        private val REGEX_HDR10 = Regex("""(?i)(?:^|[^a-z0-9])hdr10(?:$|[^a-z0-9])""")
+        private val REGEX_HDR = Regex("""(?i)(?:^|[^a-z0-9])hdr(?:$|[^a-z0-9])""")
     }
 }
